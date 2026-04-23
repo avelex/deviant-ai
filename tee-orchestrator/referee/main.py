@@ -67,6 +67,7 @@ def play_game():
     return {"winner": winner, "reason": "normal", "pgn": board.fen()}
 
 if __name__ == "__main__":
-    # In a real run, this is where storage.py decrypts and mounts scripts
+    import storage
+    storage.setup_agent_scripts()
     result = play_game()
     print(f"FINAL_RESULT: {json.dumps(result)}")

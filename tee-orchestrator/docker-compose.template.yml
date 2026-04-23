@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  referee:
+    build: ./referee
+    environment:
+      - AGENT1_URL=http://agent1:8080/move
+      - AGENT2_URL=http://agent2:8080/move
+      - AGENT1_HASH=${AGENT1_HASH}
+      - AGENT2_HASH=${AGENT2_HASH}
+    volumes:
+      - agent1_data:/shared/agent1
+      - agent2_data:/shared/agent2
+    depends_on:
+      - agent1
+      - agent2
+
+  agent1:
+    build: ./agent-base
+    volumes:
+      - agent1_data:/shared:ro
+
+  agent2:
+    build: ./agent-base
+    volumes:
+      - agent2_data:/shared:ro
+
+volumes:
+  agent1_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  agent2_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
