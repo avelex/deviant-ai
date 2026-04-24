@@ -1,19 +1,30 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
+import { createPublicClient, http, parseAbiItem, parseAbi } from 'viem';
+import { defineChain } from 'viem';
+import 'dotenv/config';
 
 const TAPP_EXAMPLES_DIR = path.resolve(__dirname, '../../../.references/og-tapp/examples');
+const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
+const FACTORY_ADDRESS = "0x5C81862b660E2822d4F69ac1218E6C0fe0FfFfD2" as `0x${string}`;
+const AGENT_ID_ADDRESS = "0xd032112434295a340E5de9fe04d28b932E8B57DA" as `0x${string}`;
 
-async function deployTournament(agent1Hash: string, agent2Hash: string): Promise<string> {
-    console.log(`Deploying tournament for agents: ${agent1Hash} vs ${agent2Hash}`);
+const zeroGTestnet = defineChain({
+    id: 16600,
+    name: '0G Testnet',
+    network: '0g-testnet',
+    nativeCurrency: { name: 'A0GI', symbol: 'A0GI', decimals: 18 },
+    rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
+});
+
+export async function deployTournament(agent1Hash: string, agent2Hash: string): Promise<string> {
+    console.log(`Deploying TAPP for agents: ${agent1Hash} vs ${agent2Hash}`);
     
-    // In reality, we'd copy template and replace env vars
     const composePath = path.resolve(__dirname, '../docker-compose.template.yml');
     
     return new Promise((resolve, reject) => {
-        // We use the start_app.sh script from og-tapp reference
         const script = path.join(TAPP_EXAMPLES_DIR, 'start_app.sh');
         
-        // Mock environment variables that would normally be set by the caller
         const env = {
             ...process.env,
             TAPP_OWNER_PRIVATE_KEY: process.env.TAPP_OWNER_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -31,36 +42,108 @@ async function deployTournament(agent1Hash: string, agent2Hash: string): Promise
 
         console.log(`Executing: ${script} ${args.join(' ')}`);
         
-        // MVP: We log instead of executing to prevent needing a running TAPP instance
-        console.log("Mock TAPP Deployment Successful. Task ID: mock-task-123");
-        resolve("mock-task-123");
-        
-        /* Real implementation:
+        // Executing the start_app.sh
         const child = spawn(script, args, { env });
         
         let output = '';
-        child.stdout.on('data', (data) => output += data.toString());
-        child.stderr.on('data', (data) => console.error(data.toString()));
+        child.stdout.on('data', (data) => {
+            const str = data.toString();
+            output += str;
+            console.log(`[TAPP Deploy] ${str.trim()}`);
+        });
+        child.stderr.on('data', (data) => console.error(`[TAPP Error] ${data.toString().trim()}`));
         
         child.on('close', (code) => {
             if (code !== 0) return reject(new Error(`Tapp deployment failed: ${code}`));
-            // Parse output for Task ID
             const match = output.match(/Task ID:\s*([a-zA-Z0-9-]+)/);
             if (match) resolve(match[1]);
             else resolve("unknown-task-id");
         });
-        */
     });
 }
 
-async function main() {
-    console.log("Watcher started, listening for events...");
-    // MVP: Simulate event trigger
-    setTimeout(async () => {
-        const taskId = await deployTournament("hashA123", "hashB456");
-        console.log(`Tournament deployed. Monitoring task: ${taskId}`);
-        // Here we would poll get_task_status.sh, then get_app_log.sh, then submit to contract
-    }, 2000);
+async function handleTournamentStarted(publicClient: any, tournamentAddress: `0x${string}`) {
+    console.log(`\n[Watcher] TournamentStarted event detected at ${tournamentAddress}`);
+
+    const tournamentAbi = parseAbi([
+        'function getAgentKeys() external view returns (uint256[])'
+    ]);
+    
+    const inftAbi = parseAbi([
+        'struct IntelligentData { string dataDescription; bytes32 dataHash; }',
+        'function intelligentData(uint256 tokenId) external view returns (IntelligentData[])'
+    ]);
+
+    try {
+        console.log(`[Watcher] Fetching Agent IDs for tournament...`);
+        const agentKeys = await publicClient.readContract({
+            address: tournamentAddress,
+            abi: tournamentAbi,
+            functionName: 'getAgentKeys'
+        }) as bigint[];
+
+        if (agentKeys.length < 2) {
+            console.log(`[Watcher] Tournament has less than 2 agents, skipping.`);
+            return;
+        }
+
+        console.log(`[Watcher] Found Agent IDs: ${agentKeys.join(', ')}`);
+
+        // Fetch hashes for the first two agents
+        const hashes = [];
+        for (let i = 0; i < 2; i++) {
+            const data = await publicClient.readContract({
+                address: AGENT_ID_ADDRESS,
+                abi: inftAbi,
+                functionName: 'intelligentData',
+                args: [agentKeys[i]]
+            }) as { dataDescription: string, dataHash: string }[];
+            
+            // Find the script hash
+            const scriptData = data.find(d => d.dataDescription === 'script');
+            if (scriptData) {
+                hashes.push(scriptData.dataHash);
+                console.log(`[Watcher] Agent ${agentKeys[i]} Script Hash: ${scriptData.dataHash}`);
+            } else {
+                console.warn(`[Watcher] No script hash found for Agent ${agentKeys[i]}`);
+                hashes.push("");
+            }
+        }
+
+        const taskId = await deployTournament(hashes[0], hashes[1]);
+        console.log(`[Watcher] Deployment successful. Task ID: ${taskId}`);
+
+    } catch (error) {
+        console.error(`[Watcher] Failed to process tournament ${tournamentAddress}:`, error);
+    }
 }
 
-main().catch(console.error);
+async function main() {
+    const publicClient = createPublicClient({ 
+        chain: zeroGTestnet,
+        transport: http()
+    });
+
+    console.log("[Watcher] Started, listening for TournamentStarted events...");
+    console.log(`[Watcher] Factory Address: ${FACTORY_ADDRESS}`);
+
+    publicClient.watchEvent({
+        address: FACTORY_ADDRESS,
+        event: parseAbiItem('event TournamentStarted(address indexed tournamentAddress)'),
+        onLogs: async (logs) => {
+            for (const log of logs) {
+                if (log.args.tournamentAddress) {
+                    await handleTournamentStarted(publicClient, log.args.tournamentAddress);
+                }
+            }
+        }
+    });
+
+    // Keep process alive
+    process.stdin.resume();
+}
+
+// Only run main if executed directly
+if (require.main === module) {
+    main().catch(console.error);
+}
