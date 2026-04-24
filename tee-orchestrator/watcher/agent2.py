@@ -1,0 +1,1 @@
+def get_move(fen): return 'e7e5'

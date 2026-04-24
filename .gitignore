@@ -1,1 +1,6 @@
 .references/.worktrees/
+dependencies/
+cache/
+node_modules/
+out/
+.env

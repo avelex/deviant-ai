@@ -6,6 +6,8 @@
     "start": "ts-node index.ts"
   },
   "dependencies": {
+    "@0gfoundation/0g-ts-sdk": "^1.2.6",
+    "dotenv": "^17.4.2",
     "ethers": "^6.8.1"
   },
   "devDependencies": {

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin-contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin-contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin-contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin-contracts/utils/cryptography/MessageHashUtils.sol";
-import "./interfaces/IERC7857Authorize.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {IERC7857Authorize} from "0g-agent-nft/interfaces/IERC7857Authorize.sol";
 
 contract Tournament is Initializable, ReentrancyGuardUpgradeable {
     using ECDSA for bytes32;
@@ -19,7 +19,12 @@ contract Tournament is Initializable, ReentrancyGuardUpgradeable {
         uint256 startTime;
     }
 
-    enum TournamentState { Created, Active, Finished, Canceled }
+    enum TournamentState {
+        Created,
+        Active,
+        Finished,
+        Canceled
+    }
 
     TournamentConfig public config;
     TournamentState public state;
@@ -35,13 +40,10 @@ contract Tournament is Initializable, ReentrancyGuardUpgradeable {
     mapping(uint256 => uint256) public totalBetsOnAgent;
     mapping(address => bool) public hasClaimed;
 
-    event MatchReady();
+    event TournamentStarted();
     event TournamentResolved(uint256 winnerAgentId);
 
-    function initialize(
-        TournamentConfig memory _config,
-        address _inftAddress
-    ) public initializer {
+    function initialize(TournamentConfig memory _config, address _inftAddress) public initializer {
         __ReentrancyGuard_init();
         config = _config;
         inftContract = IERC7857Authorize(_inftAddress);
@@ -56,7 +58,7 @@ contract Tournament is Initializable, ReentrancyGuardUpgradeable {
 
         address[] memory authorized = inftContract.authorizedUsersOf(agentId);
         bool isAuthorized = false;
-        for (uint i = 0; i < authorized.length; i++) {
+        for (uint256 i = 0; i < authorized.length; i++) {
             if (authorized[i] == config.refereeTappAddress) {
                 isAuthorized = true;
                 break;
@@ -70,7 +72,7 @@ contract Tournament is Initializable, ReentrancyGuardUpgradeable {
 
         if (participantsCount >= config.maxSlots) {
             state = TournamentState.Active;
-            emit MatchReady();
+            emit TournamentStarted();
         }
     }
 
@@ -92,12 +94,12 @@ contract Tournament is Initializable, ReentrancyGuardUpgradeable {
         bytes32 messageHash = keccak256(abi.encodePacked(address(this), _winnerAgentId, taskId));
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
         address signer = ECDSA.recover(ethSignedMessageHash, signature);
-        
+
         require(signer == config.refereeTappAddress, "Invalid TEE signature");
 
         winnerAgentId = _winnerAgentId;
         state = TournamentState.Finished;
-        
+
         emit TournamentResolved(_winnerAgentId);
     }
 
@@ -130,9 +132,9 @@ contract Tournament is Initializable, ReentrancyGuardUpgradeable {
         }
 
         require(reward > 0, "No rewards to claim");
-        
+
         hasClaimed[msg.sender] = true;
-        (bool success, ) = payable(msg.sender).call{value: reward}("");
+        (bool success,) = payable(msg.sender).call{value: reward}("");
         require(success, "Transfer failed");
     }
 }
