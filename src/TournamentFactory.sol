@@ -20,7 +20,7 @@ contract TournamentFactory {
     function createTournament(
         uint256 slotPrice,
         uint256 maxSlots,
-        uint8 commissionBps,
+        uint16 commissionBps,
         address refereeTappAddress,
         uint256 startTime
     ) external returns (address) {

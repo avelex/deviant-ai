@@ -15,7 +15,7 @@ contract Tournament is Initializable, ReentrancyGuardUpgradeable {
         address refereeTappAddress;
         uint256 slotPrice;
         uint256 maxSlots;
-        uint8 commissionBps;
+        uint16 commissionBps;
         uint256 startTime;
     }
 
