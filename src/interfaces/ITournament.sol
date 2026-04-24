@@ -4,11 +4,14 @@ pragma solidity ^0.8.20;
 interface ITournament {
     struct Config {
         address owner;
-        address refereeTappAddress;
+        address tapp;
         uint256 slotPrice;
         uint256 maxSlots;
         uint16 feeRate;
         uint256 startTime;
+        string name;
+        string category;
+        uint256 id;
     }
 
     enum State {
@@ -27,4 +30,6 @@ interface ITournament {
     function resolveTournament(uint256 winnerAgentId) external;
 
     function claimRewards() external;
+
+    function setTapp(address _tapp) external;
 }

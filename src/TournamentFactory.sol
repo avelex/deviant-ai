@@ -13,8 +13,9 @@ contract TournamentFactory is Ownable {
     address public tournamentImpl;
     address public agentNFT;
     EnumerableSet.AddressSet private tournaments;
+    mapping(address => bool) public isReferee;
 
-    event TournamentCreated(address indexed tournamentAddress);
+    event TournamentCreated(address indexed tournamentAddress, string category, uint256 id);
     event TournamentStarted(address indexed tournamentAddress);
 
     constructor(address _agentNFTAddress, address _tournamentImpl) Ownable(msg.sender) {
@@ -30,6 +31,11 @@ contract TournamentFactory is Ownable {
         _;
     }
 
+    modifier onlyReferee() {
+        require(isReferee[msg.sender], "Not a referee");
+        _;
+    }
+
     function setTournamentImpl(address _tournamentImpl) external onlyOwner {
         require(_tournamentImpl != address(0), "Invalid tournament implementation address");
         tournamentImpl = _tournamentImpl;
@@ -40,28 +46,41 @@ contract TournamentFactory is Ownable {
         agentNFT = _agentNFTAddress;
     }
 
+    function updateReferee(address _referee, bool _isAllowed) external onlyOwner {
+        isReferee[_referee] = _isAllowed;
+    }
+
+    function setTournamentTappAddress(address _tournament, address _tapp) external onlyReferee {
+        ITournament(_tournament).setTapp(_tapp);
+    }
+
     function createTournament(
+        string memory name,
+        string memory category,
         uint256 slotPrice,
         uint256 maxSlots,
         uint16 feeRate,
-        address refereeTappAddress,
         uint256 startTime
     ) external returns (address) {
         address clone = Clones.clone(tournamentImpl);
+        uint256 id = tournaments.length() + 1;
 
         ITournament.Config memory config = ITournament.Config({
             owner: msg.sender,
-            refereeTappAddress: refereeTappAddress,
+            tapp: address(0),
             slotPrice: slotPrice,
             maxSlots: maxSlots,
             feeRate: feeRate,
-            startTime: startTime
+            startTime: startTime,
+            name: name,
+            category: category,
+            id: id
         });
 
         Tournament(clone).initialize(config, agentNFT);
         tournaments.add(clone);
 
-        emit TournamentCreated(clone);
+        emit TournamentCreated(clone, category, id);
 
         return clone;
     }

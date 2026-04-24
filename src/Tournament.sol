@@ -20,7 +20,6 @@ contract Tournament is ITournament {
     uint256 public winnerAgentId;
     uint256 public totalEntryFees;
     uint256 public totalBetsPool;
-    uint256 public participantsCount;
 
     EnumerableMap.UintToAddressMap private agents;
     mapping(address => uint256) public bets;
@@ -29,7 +28,12 @@ contract Tournament is ITournament {
 
     uint256 constant FEE_RATE_MAX_BPS = 10000;
 
-    function initialize(ITournament.Config memory _config, address _agentNFTContractAddress) public {
+    modifier onlyFactory() {
+        require(msg.sender == address(factory), "Not factory");
+        _;
+    }
+
+    function initialize(ITournament.Config memory _config, address _agentNFTContractAddress) public onlyFactory {
         factory = ITournamentFactory(msg.sender);
         config = _config;
         agentNFTContract = IERC7857Authorize(_agentNFTContractAddress);
@@ -41,12 +45,13 @@ contract Tournament is ITournament {
         require(msg.value == config.slotPrice, "Incorrect slot price");
         require(agentNFTContract.ownerOf(agentId) == msg.sender, "Not agent owner");
         require(!agents.contains(agentId), "Agent already joined");
-        require(participantsCount < config.maxSlots, "Tournament is full");
+        require(agents.length() < config.maxSlots, "Tournament is full");
+        require(config.tapp != address(0), "Tournament not yet have tapp address");
 
         address[] memory authorized = agentNFTContract.authorizedUsersOf(agentId);
         bool isAuthorized = false;
         for (uint256 i = 0; i < authorized.length; i++) {
-            if (authorized[i] == config.refereeTappAddress) {
+            if (authorized[i] == config.tapp) {
                 isAuthorized = true;
                 break;
             }
@@ -55,12 +60,11 @@ contract Tournament is ITournament {
 
         agents.set(agentId, msg.sender);
         totalEntryFees += msg.value;
-        participantsCount++;
     }
 
     function startTournament() external {
         require(state == ITournament.State.Registration, "Not in Registration state");
-        require(participantsCount == config.maxSlots, "Not enough participants");
+        require(agents.length() == config.maxSlots, "Not enough participants");
         require(block.timestamp >= config.startTime, "Not yet time to start tournament");
 
         state = ITournament.State.Active;
@@ -129,6 +133,14 @@ contract Tournament is ITournament {
         hasClaimed[msg.sender] = true;
         (bool success,) = payable(msg.sender).call{value: reward}("");
         require(success, "Transfer failed");
+    }
+
+    function setTapp(address _tapp) external onlyFactory {
+        require(state == ITournament.State.Registration, "Not in Registration state");
+        require(config.tapp == address(0), "Tournament already has tapp address");
+        require(_tapp != address(0), "Invalid tapp address");
+
+        config.tapp = _tapp;
     }
 
     function getAgentKeys() public view returns (uint256[] memory) {
