@@ -1,18 +1,29 @@
 version: '3.8'
 services:
+  downloader:
+    build: ./downloader
+    environment:
+      - AGENT1_HASH=${AGENT1_HASH}
+      - AGENT2_HASH=${AGENT2_HASH}
+    volumes:
+      - shared_data:/shared
+
   referee:
     build: ./referee
     environment:
       - AGENT1_URL=http://agent1:8080/move
       - AGENT2_URL=http://agent2:8080/move
-      - AGENT1_HASH=${AGENT1_HASH}
-      - AGENT2_HASH=${AGENT2_HASH}
     volumes:
-      - agent1_data:/shared/agent1
-      - agent2_data:/shared/agent2
+      - shared_data:/shared
+      - agent1_data:/shared_agent1
+      - agent2_data:/shared_agent2
     depends_on:
-      - agent1
-      - agent2
+      downloader:
+        condition: service_completed_successfully
+      agent1:
+        condition: service_started
+      agent2:
+        condition: service_started
 
   agent1:
     build: ./agent-base
@@ -25,6 +36,11 @@ services:
       - agent2_data:/shared:ro
 
 volumes:
+  shared_data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
   agent1_data:
     driver: local
     driver_opts:
