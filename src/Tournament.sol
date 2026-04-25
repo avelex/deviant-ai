@@ -4,11 +4,12 @@ pragma solidity ^0.8.20;
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IERC7857Authorize} from "0g-agent-nft/interfaces/IERC7857Authorize.sol";
 import {ITournament} from "./interfaces/ITournament.sol";
 import {ITournamentFactory} from "./interfaces/ITournamentFactory.sol";
 
-contract Tournament is ITournament {
+contract Tournament is ITournament, Initializable {
     using EnumerableMap for EnumerableMap.UintToAddressMap;
     using ECDSA for bytes32;
 
@@ -33,10 +34,10 @@ contract Tournament is ITournament {
         _;
     }
 
-    function initialize(ITournament.Config memory _config, address _agentNFTContractAddress) public onlyFactory {
-        factory = ITournamentFactory(msg.sender);
+    function initialize(ITournament.Config memory _config, address _agentNFT, address _factory) public initializer {
+        factory = ITournamentFactory(_factory);
         config = _config;
-        agentNFTContract = IERC7857Authorize(_agentNFTContractAddress);
+        agentNFTContract = IERC7857Authorize(_agentNFT);
         state = ITournament.State.Registration;
     }
 
@@ -68,9 +69,9 @@ contract Tournament is ITournament {
         require(block.timestamp >= config.startTime, "Not yet time to start tournament");
 
         state = ITournament.State.Active;
-        emit TournamentStarted();
+        emit ITournament.TournamentStarted();
 
-        factory.notifyTournamentStarted();
+        factory.notifyTournamentStarted(config.category, config.id);
     }
 
     function placeBet(uint256 agentId) external payable {

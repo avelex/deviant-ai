@@ -16,7 +16,7 @@ contract TournamentFactory is Ownable {
     mapping(address => bool) public isReferee;
 
     event TournamentCreated(address indexed tournamentAddress, string category, uint256 id);
-    event TournamentStarted(address indexed tournamentAddress);
+    event TournamentStarted(address indexed tournamentAddress, string category, uint256 id);
 
     constructor(address _agentNFTAddress, address _tournamentImpl) Ownable(msg.sender) {
         require(_agentNFTAddress != address(0), "Invalid agent NFT address");
@@ -24,6 +24,7 @@ contract TournamentFactory is Ownable {
 
         agentNFT = _agentNFTAddress;
         tournamentImpl = _tournamentImpl;
+        isReferee[msg.sender] = true;
     }
 
     modifier onlyTournament() {
@@ -62,9 +63,7 @@ contract TournamentFactory is Ownable {
         uint16 feeRate,
         uint256 startTime
     ) external returns (address) {
-        address clone = Clones.clone(tournamentImpl);
         uint256 id = tournaments.length() + 1;
-
         ITournament.Config memory config = ITournament.Config({
             owner: msg.sender,
             tapp: address(0),
@@ -77,15 +76,16 @@ contract TournamentFactory is Ownable {
             id: id
         });
 
-        Tournament(clone).initialize(config, agentNFT);
-        tournaments.add(clone);
+        address instance = Clones.clone(tournamentImpl);
+        Tournament(instance).initialize(config, agentNFT, address(this));
+        tournaments.add(instance);
 
-        emit TournamentCreated(clone, category, id);
+        emit TournamentCreated(instance, category, id);
 
-        return clone;
+        return instance;
     }
 
-    function notifyTournamentStarted() external onlyTournament {
-        emit TournamentStarted(msg.sender);
+    function notifyTournamentStarted(string calldata category, uint256 id) external onlyTournament {
+        emit TournamentStarted(msg.sender, category, id);
     }
 }

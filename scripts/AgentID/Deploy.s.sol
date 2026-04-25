@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Script, console} from "forge-std/Script.sol";
 import {AgentNFT} from "0g-agent-nft/AgentNFT.sol";
-import {MockDataVerifier} from "../src/mocks/MockDataVerifier.sol";
+import {MockDataVerifier} from "../../src/mocks/MockDataVerifier.sol";
 
 contract DeployAgentNFT is Script {
     function run() public {

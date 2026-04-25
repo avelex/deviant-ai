@@ -1,30 +1,31 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
-import { createPublicClient, http, parseAbiItem, parseAbi } from 'viem';
+import { createPublicClient, http, parseAbiItem, parseAbi, PublicClient } from 'viem';
 import { defineChain } from 'viem';
 import 'dotenv/config';
 
 const TAPP_EXAMPLES_DIR = path.resolve(__dirname, '../../../.references/og-tapp/examples');
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = "0x5C81862b660E2822d4F69ac1218E6C0fe0FfFfD2" as `0x${string}`;
+const FACTORY_ADDRESS = "0x6eaD71726d122a08061Cba1BA2Cdb7580d0c2B55" as `0x${string}`;
 const AGENT_ID_ADDRESS = "0xd032112434295a340E5de9fe04d28b932E8B57DA" as `0x${string}`;
 
 const zeroGTestnet = defineChain({
-    id: 16600,
+    id: 16602,
     name: '0G Testnet',
     network: '0g-testnet',
-    nativeCurrency: { name: 'A0GI', symbol: 'A0GI', decimals: 18 },
+    nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
     rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
 });
 
 export async function deployTournament(agent1Hash: string, agent2Hash: string): Promise<string> {
     console.log(`Deploying TAPP for agents: ${agent1Hash} vs ${agent2Hash}`);
-    
+    return "random";
+
     const composePath = path.resolve(__dirname, '../docker-compose.template.yml');
-    
+
     return new Promise((resolve, reject) => {
         const script = path.join(TAPP_EXAMPLES_DIR, 'start_app.sh');
-        
+
         const env = {
             ...process.env,
             TAPP_OWNER_PRIVATE_KEY: process.env.TAPP_OWNER_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -41,10 +42,10 @@ export async function deployTournament(agent1Hash: string, agent2Hash: string): 
         ];
 
         console.log(`Executing: ${script} ${args.join(' ')}`);
-        
+
         // Executing the start_app.sh
         const child = spawn(script, args, { env });
-        
+
         let output = '';
         child.stdout.on('data', (data) => {
             const str = data.toString();
@@ -52,7 +53,7 @@ export async function deployTournament(agent1Hash: string, agent2Hash: string): 
             console.log(`[TAPP Deploy] ${str.trim()}`);
         });
         child.stderr.on('data', (data) => console.error(`[TAPP Error] ${data.toString().trim()}`));
-        
+
         child.on('close', (code) => {
             if (code !== 0) return reject(new Error(`Tapp deployment failed: ${code}`));
             const match = output.match(/Task ID:\s*([a-zA-Z0-9-]+)/);
@@ -62,16 +63,16 @@ export async function deployTournament(agent1Hash: string, agent2Hash: string): 
     });
 }
 
-async function handleTournamentStarted(publicClient: any, tournamentAddress: `0x${string}`) {
-    console.log(`\n[Watcher] TournamentStarted event detected at ${tournamentAddress}`);
+async function handleTournamentStarted(publicClient: PublicClient, tournamentAddress: `0x${string}`, category: string, id: bigint) {
+    console.log(`\n[Watcher] TournamentStarted event detected at ${tournamentAddress} for category ${category} with id ${id}`);
 
     const tournamentAbi = parseAbi([
         'function getAgentKeys() external view returns (uint256[])'
     ]);
-    
+
     const inftAbi = parseAbi([
         'struct IntelligentData { string dataDescription; bytes32 dataHash; }',
-        'function intelligentData(uint256 tokenId) external view returns (IntelligentData[])'
+        'function intelligentDatasOf(uint256 tokenId) external view returns (IntelligentData[])'
     ]);
 
     try {
@@ -95,10 +96,10 @@ async function handleTournamentStarted(publicClient: any, tournamentAddress: `0x
             const data = await publicClient.readContract({
                 address: AGENT_ID_ADDRESS,
                 abi: inftAbi,
-                functionName: 'intelligentData',
+                functionName: 'intelligentDatasOf',
                 args: [agentKeys[i]]
             }) as { dataDescription: string, dataHash: string }[];
-            
+
             // Find the script hash
             const scriptData = data.find(d => d.dataDescription === 'script');
             if (scriptData) {
@@ -119,7 +120,7 @@ async function handleTournamentStarted(publicClient: any, tournamentAddress: `0x
 }
 
 async function main() {
-    const publicClient = createPublicClient({ 
+    const publicClient = createPublicClient({
         chain: zeroGTestnet,
         transport: http()
     });
@@ -129,11 +130,11 @@ async function main() {
 
     publicClient.watchEvent({
         address: FACTORY_ADDRESS,
-        event: parseAbiItem('event TournamentStarted(address indexed tournamentAddress)'),
+        event: parseAbiItem('event TournamentStarted(address indexed tournamentAddress, string category, uint256 id)'),
         onLogs: async (logs) => {
             for (const log of logs) {
-                if (log.args.tournamentAddress) {
-                    await handleTournamentStarted(publicClient, log.args.tournamentAddress);
+                if (log.args.tournamentAddress && log.args.category === "chess" && log.args.id) {
+                    await handleTournamentStarted(publicClient, log.args.tournamentAddress, log.args.category, log.args.id);
                 }
             }
         }
