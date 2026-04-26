@@ -4,6 +4,8 @@ import json
 import logging
 import requests
 import chess
+import hashlib
+from dstack_sdk import DstackClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -66,8 +68,34 @@ def play_game():
     logger.info(f"Game finished. Result: {result}")
     return {"winner": winner, "reason": "normal", "pgn": board.fen()}
 
+def sign_and_attest(result):
+    try:
+        client = DstackClient()
+        result_json = json.dumps(result, sort_keys=True)
+        result_hash = hashlib.sha256(result_json.encode()).hexdigest()
+        
+        logger.info(f"Generating attestation for result hash: {result_hash}")
+        
+        # Derive a deterministic key using dstack-sdk
+        # This uses the TEE's hardware-bound key derivation
+        key = client.get_key(path="tournament-result", purpose="signing")
+        
+        # Generate a TDX quote for the result hash
+        quote = client.get_quote(result_hash)
+        
+        result["attestation"] = {
+            "quote": quote,
+            "hash": result_hash,
+            "signature": f"mock-signature-using-derived-key" # Mock signature for now
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate attestation: {e}")
+        result["attestation"] = {"error": str(e)}
+    return result
+
 if __name__ == "__main__":
     import storage
     storage.setup_agent_scripts()
     result = play_game()
+    result = sign_and_attest(result)
     print(f"FINAL_RESULT: {json.dumps(result)}")
