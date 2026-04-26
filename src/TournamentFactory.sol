@@ -51,8 +51,8 @@ contract TournamentFactory is Ownable {
         isReferee[_referee] = _isAllowed;
     }
 
-    function setTournamentTappAddress(address _tournament, address _tapp) external onlyReferee {
-        ITournament(_tournament).setTapp(_tapp);
+    function setTournamentTee(address _tournament, address _tee) external onlyReferee {
+        ITournament(_tournament).setTee(_tee);
     }
 
     function createTournament(
@@ -66,7 +66,7 @@ contract TournamentFactory is Ownable {
         uint256 id = tournaments.length() + 1;
         ITournament.Config memory config = ITournament.Config({
             owner: msg.sender,
-            tapp: address(0),
+            tee: address(0),
             slotPrice: slotPrice,
             maxSlots: maxSlots,
             feeRate: feeRate,

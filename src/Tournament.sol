@@ -41,25 +41,25 @@ contract Tournament is ITournament, Initializable {
         state = ITournament.State.Registration;
     }
 
-    function joinTournament(uint256 agentId) external payable {
+    function joinTournament(uint256 _agentId) external payable {
         require(state == ITournament.State.Registration, "Not in Registration state");
         require(msg.value == config.slotPrice, "Incorrect slot price");
-        require(agentNFTContract.ownerOf(agentId) == msg.sender, "Not agent owner");
-        require(!agents.contains(agentId), "Agent already joined");
+        require(agentNFTContract.ownerOf(_agentId) == msg.sender, "Not agent owner");
+        require(!agents.contains(_agentId), "Agent already joined");
         require(agents.length() < config.maxSlots, "Tournament is full");
-        require(config.tapp != address(0), "Tournament not yet have tapp address");
+        require(config.tee != address(0), "Tournament not yet have TEE address");
 
-        address[] memory authorized = agentNFTContract.authorizedUsersOf(agentId);
-        bool isAuthorized = false;
-        for (uint256 i = 0; i < authorized.length; i++) {
-            if (authorized[i] == config.tapp) {
-                isAuthorized = true;
-                break;
-            }
-        }
-        require(isAuthorized, "TEE Orchestrator is not authorized");
+        // address[] memory authorized = agentNFTContract.authorizedUsersOf(agentId);
+        // bool isAuthorized = false;
+        // for (uint256 i = 0; i < authorized.length; i++) {
+        //     if (authorized[i] == config.tee) {
+        //         isAuthorized = true;
+        //         break;
+        //     }
+        // }
+        // require(isAuthorized, "TEE is not authorized");
 
-        agents.set(agentId, msg.sender);
+        agents.set(_agentId, msg.sender);
         totalEntryFees += msg.value;
     }
 
@@ -74,26 +74,26 @@ contract Tournament is ITournament, Initializable {
         factory.notifyTournamentStarted(config.category, config.id);
     }
 
-    function placeBet(uint256 agentId) external payable {
+    function placeBet(uint256 _agentId) external payable {
         require(state == ITournament.State.Active, "Not in Active state");
         require(block.timestamp < config.startTime, "Betting window closed");
         require(msg.value > 0, "Bet must be > 0");
-        require(agents.contains(agentId), "Agent not in tournament");
+        require(agents.contains(_agentId), "Agent not in tournament");
 
         bets[msg.sender] += msg.value;
         totalBetsPool += msg.value;
-        totalBetsOnAgent[agentId] += msg.value;
+        totalBetsOnAgent[_agentId] += msg.value;
     }
 
-    function resolveTournament(uint256 _winnerAgentId) external {
+    function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature) external {
         require(state == ITournament.State.Active, "Not in Active state");
         require(agents.contains(_winnerAgentId), "Winner not in tournament");
 
-        // bytes32 messageHash = keccak256(abi.encodePacked(address(this), _winnerAgentId, taskId));
-        // bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
-        // address signer = ECDSA.recover(ethSignedMessageHash, signature);
+        bytes32 messageHash = keccak256(abi.encodePacked(address(this), _winnerAgentId, _resultHash));
+        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
+        address signer = ECDSA.recover(ethSignedMessageHash, _signature);
 
-        // require(signer == config.refereeTappAddress, "Invalid TEE signature");
+        require(signer == config.tee, "Invalid TEE signature");
 
         winnerAgentId = _winnerAgentId;
         state = ITournament.State.Finished;
@@ -136,12 +136,12 @@ contract Tournament is ITournament, Initializable {
         require(success, "Transfer failed");
     }
 
-    function setTapp(address _tapp) external onlyFactory {
+    function setTee(address _tee) external onlyFactory {
         require(state == ITournament.State.Registration, "Not in Registration state");
-        require(config.tapp == address(0), "Tournament already has tapp address");
-        require(_tapp != address(0), "Invalid tapp address");
+        require(config.tee == address(0), "Tournament already has TEE address");
+        require(_tee != address(0), "Invalid TEE address");
 
-        config.tapp = _tapp;
+        config.tee = _tee;
     }
 
     function getAgentKeys() public view returns (uint256[] memory) {

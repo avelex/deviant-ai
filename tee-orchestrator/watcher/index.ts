@@ -4,7 +4,7 @@ import 'dotenv/config';
 import { createClient } from "@phala/cloud";
 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = "0x6eaD71726d122a08061Cba1BA2Cdb7580d0c2B55" as `0x${string}`;
+const FACTORY_ADDRESS = "0x71be3e225A2F46F3350B7374737a5341148Fa6A9" as `0x${string}`;
 const AGENT_ID_ADDRESS = "0xd032112434295a340E5de9fe04d28b932E8B57DA" as `0x${string}`;
 
 const zeroGTestnet = defineChain({
@@ -15,10 +15,8 @@ const zeroGTestnet = defineChain({
     rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
 });
 
-export async function deployTournament(agent1Hash: string, agent2Hash: string, appId: string): Promise<string> {
+export async function deployTournament(tournament: string, appId: string): Promise<string> {
     console.log(`Deploying tournament ${appId} to Phala Cloud...`);
-    console.log(`Agent 1: ${agent1Hash}`);
-    console.log(`Agent 2: ${agent2Hash}`);
 
     if (!process.env.PHALA_CLOUD_API_KEY) {
         throw new Error('PHALA_CLOUD_API_KEY environment variable is required');
@@ -39,9 +37,14 @@ export async function deployTournament(agent1Hash: string, agent2Hash: string, a
 services:
   referee:
     image: alexgubin/deviant-referee:v0.1.0
+    ports:
+      - "80:80"
     environment:
       - AGENT1_URL=http://agent1:8080/move
       - AGENT2_URL=http://agent2:8080/move
+      - FACTORY_ADDRESS=${FACTORY_ADDRESS}
+      - TOURNAMENT_ADDRESS=${tournament}
+      - RPC_URL=${RPC_URL}
     volumes:
       - /var/run/dstack.sock:/var/run/dstack.sock
     depends_on:
@@ -53,7 +56,11 @@ services:
   agent1:
     image: alexgubin/deviant-agent-base:v0.1.0
     environment:
-      - SCRIPT_HASH=${agent1Hash}
+      - AGENT_INDEX=0
+      - RPC_URL=${RPC_URL}
+      - FACTORY_ADDRESS=${FACTORY_ADDRESS}
+      - TOURNAMENT_ADDRESS=${tournament}
+      - AGENT_ID_ADDRESS=${AGENT_ID_ADDRESS}
     volumes:
       - agent1_data:/data
       - /var/run/dstack.sock:/var/run/dstack.sock
@@ -61,7 +68,11 @@ services:
   agent2:
     image: alexgubin/deviant-agent-base:v0.1.0
     environment:
-      - SCRIPT_HASH=${agent2Hash}
+      - AGENT_INDEX=1
+      - RPC_URL=${RPC_URL}
+      - FACTORY_ADDRESS=${FACTORY_ADDRESS}
+      - TOURNAMENT_ADDRESS=${tournament}
+      - AGENT_ID_ADDRESS=${AGENT_ID_ADDRESS}
     volumes:
       - agent2_data:/data
       - /var/run/dstack.sock:/var/run/dstack.sock
@@ -86,55 +97,10 @@ volumes:
 async function handleTournamentStarted(publicClient: PublicClient, tournamentAddress: `0x${string}`, category: string, id: bigint) {
     console.log(`\n[Watcher] TournamentStarted event detected at ${tournamentAddress} for category ${category} with id ${id}`);
 
-    const tournamentAbi = parseAbi([
-        'function getAgentKeys() external view returns (uint256[])'
-    ]);
-
-    const inftAbi = parseAbi([
-        'struct IntelligentData { string dataDescription; bytes32 dataHash; }',
-        'function intelligentDatasOf(uint256 tokenId) external view returns (IntelligentData[])'
-    ]);
-
     try {
-        console.log(`[Watcher] Fetching Agent IDs for tournament...`);
-        const agentKeys = await publicClient.readContract({
-            address: tournamentAddress,
-            abi: tournamentAbi,
-            functionName: 'getAgentKeys'
-        }) as bigint[];
-
-        if (agentKeys.length < 2) {
-            console.log(`[Watcher] Tournament has less than 2 agents, skipping.`);
-            return;
-        }
-
-        console.log(`[Watcher] Found Agent IDs: ${agentKeys.join(', ')}`);
-
-        // Fetch hashes for the first two agents
-        const hashes = [];
-        for (let i = 0; i < 2; i++) {
-            const data = await publicClient.readContract({
-                address: AGENT_ID_ADDRESS,
-                abi: inftAbi,
-                functionName: 'intelligentDatasOf',
-                args: [agentKeys[i]]
-            }) as { dataDescription: string, dataHash: string }[];
-
-            // Find the script hash
-            const scriptData = data.find(d => d.dataDescription === 'script');
-            if (scriptData) {
-                hashes.push(scriptData.dataHash);
-                console.log(`[Watcher] Agent ${agentKeys[i]} Script Hash: ${scriptData.dataHash}`);
-            } else {
-                console.warn(`[Watcher] No script hash found for Agent ${agentKeys[i]}`);
-                hashes.push("");
-            }
-        }
-
         const appId = `${category}-${id.toString()}`;
-        const taskId = await deployTournament(hashes[0], hashes[1], appId);
+        const taskId = await deployTournament(tournamentAddress, appId);
         console.log(`[Watcher] Deployment successful. Task ID: ${taskId}`);
-
     } catch (error) {
         console.error(`[Watcher] Failed to process tournament ${tournamentAddress}:`, error);
     }
@@ -146,12 +112,12 @@ async function main() {
         transport: http()
     });
 
-    console.log("[Watcher] Started, listening for TournamentStarted events...");
+    console.log("[Watcher] Started, listening for TournamentCreated events...");
     console.log(`[Watcher] Factory Address: ${FACTORY_ADDRESS}`);
 
     publicClient.watchEvent({
         address: FACTORY_ADDRESS,
-        event: parseAbiItem('event TournamentStarted(address indexed tournamentAddress, string category, uint256 id)'),
+        event: parseAbiItem('event TournamentCreated(address indexed tournamentAddress, string category, uint256 id)'),
         onLogs: async (logs) => {
             for (const log of logs) {
                 if (log.args.tournamentAddress && log.args.category === "chess" && log.args.id) {

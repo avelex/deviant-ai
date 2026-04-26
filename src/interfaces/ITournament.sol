@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 interface ITournament {
     struct Config {
         address owner;
-        address tapp;
+        address tee;
         uint256 slotPrice;
         uint256 maxSlots;
         uint16 feeRate;
@@ -27,9 +27,9 @@ interface ITournament {
 
     function startTournament() external;
 
-    function resolveTournament(uint256 winnerAgentId) external;
+    function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature) external;
 
     function claimRewards() external;
 
-    function setTapp(address _tapp) external;
+    function setTee(address tee) external;
 }
