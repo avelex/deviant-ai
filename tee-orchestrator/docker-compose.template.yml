@@ -1,6 +1,7 @@
+version: '3.8'
 services:
   referee:
-    image: alexgubin/deviant-referee:v0.1.0
+    build: ./referee
     environment:
       - AGENT1_URL=http://agent1:8080/move
       - AGENT2_URL=http://agent2:8080/move
@@ -13,7 +14,7 @@ services:
         condition: service_started
 
   agent1:
-    image: alexgubin/deviant-agent-base:v0.1.0
+    build: ./agent-base
     environment:
       - SCRIPT_HASH=${AGENT1_HASH}
     volumes:
@@ -21,13 +22,12 @@ services:
       - /var/run/dstack.sock:/var/run/dstack.sock
 
   agent2:
-    image: alexgubin/deviant-agent-base:v0.1.0
+    build: ./agent-base
     environment:
       - SCRIPT_HASH=${AGENT2_HASH}
     volumes:
       - agent2_data:/data
       - /var/run/dstack.sock:/var/run/dstack.sock
-
 
 volumes:
   agent1_data:

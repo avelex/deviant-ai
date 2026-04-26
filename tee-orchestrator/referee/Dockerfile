@@ -1,9 +1,9 @@
-FROM python:3.10-slim
+FROM node:20-slim
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npx tsc
 
-COPY main.py .
-
-CMD ["python", "main.py"]
+CMD ["npm", "start"]
