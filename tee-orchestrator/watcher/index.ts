@@ -4,7 +4,6 @@ import { createPublicClient, http, parseAbiItem, parseAbi, PublicClient } from '
 import { defineChain } from 'viem';
 import 'dotenv/config';
 
-const TAPP_EXAMPLES_DIR = path.resolve(__dirname, '../../../.references/og-tapp/examples');
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
 const FACTORY_ADDRESS = "0x6eaD71726d122a08061Cba1BA2Cdb7580d0c2B55" as `0x${string}`;
 const AGENT_ID_ADDRESS = "0xd032112434295a340E5de9fe04d28b932E8B57DA" as `0x${string}`;
@@ -18,46 +17,46 @@ const zeroGTestnet = defineChain({
 });
 
 export async function deployTournament(agent1Hash: string, agent2Hash: string, category: string, id: bigint): Promise<string> {
-    console.log(`Deploying TAPP for agents: ${agent1Hash} vs ${agent2Hash}`);
+    const name = `tournament-${category}-${id}`;
+    console.log(`Deploying tournament ${name} to Phala Cloud...`);
+    console.log(`Agent 1: ${agent1Hash}`);
+    console.log(`Agent 2: ${agent2Hash}`);
+
+    if (!process.env.PHALA_API_KEY) {
+        throw new Error('PHALA_API_KEY environment variable is required');
+    }
 
     const composePath = path.resolve(__dirname, '../docker-compose.template.yml');
 
     return new Promise((resolve, reject) => {
-        const script = path.join(TAPP_EXAMPLES_DIR, 'start_app.sh');
-
-        const env = {
-            ...process.env,
-            TAPP_OWNER_PRIVATE_KEY: process.env.TAPP_OWNER_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001",
-            AGENT1_HASH: agent1Hash,
-            AGENT2_HASH: agent2Hash
-        };
-
         const args = [
-            '--host', 'localhost',
-            '--port', '50051',
-            '--app-id', `${category}-${id}`,
-            '--compose-file', composePath,
-            '--use-owner'
+            'cvms', 'create',
+            '--name', name,
+            '--compose', composePath,
+            '--env', `AGENT1_HASH=${agent1Hash}`,
+            '--env', `AGENT2_HASH=${agent2Hash}`,
+            '--env', `TOURNAMENT_ID=${id}`
         ];
 
-        console.log(`Executing: ${script} ${args.join(' ')}`);
+        console.log(`Executing: phala ${args.join(' ')}`);
 
-        // Executing the start_app.sh
-        const child = spawn(script, args, { env });
+        // Executing the phala cli
+        const child = spawn('phala', args, { env: process.env });
 
         let output = '';
         child.stdout.on('data', (data) => {
             const str = data.toString();
             output += str;
-            console.log(`[TAPP Deploy] ${str.trim()}`);
+            console.log(`[Phala Deploy] ${str.trim()}`);
         });
-        child.stderr.on('data', (data) => console.error(`[TAPP Error] ${data.toString().trim()}`));
+        child.stderr.on('data', (data) => console.error(`[Phala Error] ${data.toString().trim()}`));
 
         child.on('close', (code) => {
-            if (code !== 0) return reject(new Error(`Tapp deployment failed: ${code}`));
-            const match = output.match(/Task ID:\s*([a-zA-Z0-9-]+)/);
+            if (code !== 0) return reject(new Error(`Phala deployment failed with code ${code}`));
+            // Extract some ID from output if possible, otherwise return name
+            const match = output.match(/ID:\s*([a-zA-Z0-9-]+)/);
             if (match) resolve(match[1]);
-            else resolve("unknown-task-id");
+            else resolve(name);
         });
     });
 }
@@ -110,7 +109,7 @@ async function handleTournamentStarted(publicClient: PublicClient, tournamentAdd
             }
         }
 
-        const taskId = await deployTournament(hashes[0], hashes[1]);
+        const taskId = await deployTournament(hashes[0], hashes[1], category, id);
         console.log(`[Watcher] Deployment successful. Task ID: ${taskId}`);
 
     } catch (error) {
