@@ -9,22 +9,15 @@ export async function downloadScript(hash: string, destPath: string) {
     const indexer = new Indexer(INDEXER_URL);
     
     try {
-        const fileInfo = await indexer.getFileInfo(hash);
-        if (!fileInfo) {
-            throw new Error(`File info not found for hash: ${hash}`);
-        }
-
-        console.log(`[0G Storage] File size: ${fileInfo.size} bytes`);
-        const chunks = Math.ceil(fileInfo.size / (256 * 1024));
-        let fileData = Buffer.alloc(0);
-
-        for (let i = 0; i < chunks; i++) {
-            const chunk = await indexer.download(hash, i);
-            fileData = Buffer.concat([fileData, Buffer.from(chunk)]);
-        }
-
+        // Ensure destination directory exists
         fs.mkdirSync(path.dirname(destPath), { recursive: true });
-        fs.writeFileSync(destPath, fileData);
+
+        // The Indexer.download method in TS SDK returns Promise<Error | null>
+        const err = await indexer.download(hash, destPath, true);
+        if (err) {
+            throw err;
+        }
+
         console.log(`[0G Storage] Successfully downloaded and saved to ${destPath}`);
     } catch (e: any) {
         console.error(`[0G Storage] Failed to download ${hash}: ${e.message}`);

@@ -29,7 +29,8 @@ export class AgentExecutor {
         }
 
         const script = new vm.Script(code);
-        script.runInContext(this.context);
+        // Add 5 second timeout for initial script execution
+        script.runInContext(this.context, { timeout: 5000 });
 
         this.scriptInstance = this.context.exports;
         
@@ -39,6 +40,9 @@ export class AgentExecutor {
     }
 
     public getMove(fen: string): string {
+        // In a real environment we might want to wrap this in a timeout too, 
+        // but vm.runInContext timeout only applies to the top-level execution.
+        // For a more robust solution we'd need isolated-vm or a separate process.
         return this.scriptInstance.get_move(fen);
     }
 }
