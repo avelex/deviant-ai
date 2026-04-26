@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { Chess } from 'chess.js';
+import { DstackClient } from '@phala/dstack-sdk';
+import crypto from 'crypto';
 
 const AGENT1_URL = process.env.AGENT1_URL || "http://agent1:8080/move";
 const AGENT2_URL = process.env.AGENT2_URL || "http://agent2:8080/move";
@@ -33,7 +35,7 @@ async function playGame() {
         if (!moveStr) {
             console.log(`${playerName} failed to return a move. Game over.`);
             const winner = currentTurn === 'w' ? "Agent 2" : "Agent 1";
-            return { winner, reason: "timeout_or_error", pgn: board.fen() };
+            return { winner, reason: "timeout_or_error", pgn: board.pgn() };
         }
 
         try {
@@ -41,17 +43,62 @@ async function playGame() {
             if (!move) {
                 console.log(`${playerName} made illegal move ${moveStr}. Game over.`);
                 const winner = currentTurn === 'w' ? "Agent 2" : "Agent 1";
-                return { winner, reason: "illegal_move", pgn: board.fen() };
+                return { winner, reason: "illegal_move", pgn: board.pgn() };
             }
             console.log(`Move played: ${moveStr}`);
         } catch (e: any) {
             console.log(`${playerName} returned invalid move format ${moveStr}: ${e.message}. Game over.`);
             const winner = currentTurn === 'w' ? "Agent 2" : "Agent 1";
-            return { winner, reason: "invalid_format", pgn: board.fen() };
+            return { winner, reason: "invalid_format", pgn: board.pgn() };
         }
     }
 
     const winner = board.isDraw() ? "Draw" : (board.turn() === 'w' ? "Agent 2" : "Agent 1");
     console.log(`Game finished. Winner: ${winner}`);
-    return { winner, reason: "normal", pgn: board.fen() };
+    return { winner, reason: "normal", pgn: board.pgn() };
+}
+
+async function signAndAttest(result: any) {
+    try {
+        const client = new DstackClient();
+        const isReachable = await client.isReachable();
+        if (!isReachable) {
+            console.log('dstack service is not available, skipping attestation');
+            return result;
+        }
+
+        const resultJson = JSON.stringify(result, Object.keys(result).sort());
+        const hash = crypto.createHash('sha256').update(resultJson).digest();
+
+        console.log(`Generating attestation for result hash: ${hash.toString('hex')}`);
+
+        // Derive key
+        const keyResult = await client.getKey('tournament-result');
+        
+        // Get quote
+        const quoteResult = await client.getQuote(hash);
+
+        result.attestation = {
+            quote: quoteResult.quote,
+            hash: hash.toString('hex'),
+            signature: "mock-signature-using-derived-key"
+        };
+    } catch (e: any) {
+        console.error(`Failed to generate attestation: ${e.message}`);
+        result.attestation = { error: e.message };
+    }
+    return result;
+}
+
+if (require.main === module) {
+    playGame()
+        .then(signAndAttest)
+        .then(finalResult => {
+            console.log(`FINAL_RESULT: ${JSON.stringify(finalResult)}`);
+            process.exit(0);
+        })
+        .catch(err => {
+            console.error("Fatal error:", err);
+            process.exit(1);
+        });
 }
