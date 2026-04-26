@@ -17,6 +17,7 @@ services:
       - shared_data:/shared
       - agent1_data:/shared_agent1
       - agent2_data:/shared_agent2
+      - /var/run/dstack.sock:/var/run/dstack.sock
     depends_on:
       downloader:
         condition: service_completed_successfully
@@ -29,11 +30,13 @@ services:
     build: ./agent-base
     volumes:
       - agent1_data:/shared:ro
+      - /var/run/dstack.sock:/var/run/dstack.sock
 
   agent2:
     build: ./agent-base
     volumes:
       - agent2_data:/shared:ro
+      - /var/run/dstack.sock:/var/run/dstack.sock
 
 volumes:
   shared_data:
