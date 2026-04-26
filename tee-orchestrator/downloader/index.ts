@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const INDEXER_RPC = 'https://indexer-storage-testnet-turbo.0g.ai';
-const SHARED_DIR = '/shared/encrypted';
+const SHARED_DIR = '/shared/scripts';
 
 async function downloadFile(hash: string, filename: string) {
     if (!hash || hash === "") {
@@ -39,8 +39,8 @@ async function main() {
     const agent1Hash = process.env.AGENT1_HASH || "";
     const agent2Hash = process.env.AGENT2_HASH || "";
 
-    await downloadFile(agent1Hash, "agent1.py.enc");
-    await downloadFile(agent2Hash, "agent2.py.enc");
+    await downloadFile(agent1Hash, "agent1.py");
+    await downloadFile(agent2Hash, "agent2.py");
 
     console.log("[Downloader] All downloads finished successfully.");
 }
