@@ -197,7 +197,7 @@ async function fetchAgentIds(publicClient: PublicClient) {
 
         agentIds = keys;
         console.log(`[Referee] Fetched Agent IDs from contract: ${agentIds.map(id => id.toString()).join(', ')}`);
-        await client.emitEvent('deviant-referee', `Fetched Agent IDs: ${JSON.stringify(keys)}`);
+        await client.emitEvent('deviant-referee', `Fetched Agent IDs: ${agentIds.map(id => id.toString()).join(', ')}`);
     } catch (error) {
         console.error("[Referee] Failed to fetch Agent IDs:", error);
     }
