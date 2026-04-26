@@ -1,56 +1,34 @@
-version: '3.8'
 services:
-  downloader:
-    build: ./downloader
-    environment:
-      - AGENT1_HASH=${AGENT1_HASH}
-      - AGENT2_HASH=${AGENT2_HASH}
-    volumes:
-      - shared_data:/shared
-
   referee:
-    build: ./referee
+    image: alexgubin/deviant-referee:v0.1.0
     environment:
       - AGENT1_URL=http://agent1:8080/move
       - AGENT2_URL=http://agent2:8080/move
     volumes:
-      - shared_data:/shared
-      - agent1_data:/shared_agent1
-      - agent2_data:/shared_agent2
       - /var/run/dstack.sock:/var/run/dstack.sock
     depends_on:
-      downloader:
-        condition: service_completed_successfully
       agent1:
         condition: service_started
       agent2:
         condition: service_started
 
   agent1:
-    build: ./agent-base
+    image: alexgubin/deviant-agent-base:v0.1.0
+    environment:
+      - SCRIPT_HASH=${AGENT1_HASH}
     volumes:
-      - agent1_data:/shared:ro
+      - agent1_data:/data
       - /var/run/dstack.sock:/var/run/dstack.sock
 
   agent2:
-    build: ./agent-base
+    image: alexgubin/deviant-agent-base:v0.1.0
+    environment:
+      - SCRIPT_HASH=${AGENT2_HASH}
     volumes:
-      - agent2_data:/shared:ro
+      - agent2_data:/data
       - /var/run/dstack.sock:/var/run/dstack.sock
 
+
 volumes:
-  shared_data:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   agent1_data:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   agent2_data:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs

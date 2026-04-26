@@ -3,6 +3,7 @@ import * as path from 'path';
 import { createPublicClient, http, parseAbiItem, parseAbi, PublicClient } from 'viem';
 import { defineChain } from 'viem';
 import 'dotenv/config';
+import { createClient } from "@phala/cloud";
 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
 const FACTORY_ADDRESS = "0x6eaD71726d122a08061Cba1BA2Cdb7580d0c2B55" as `0x${string}`;
@@ -16,49 +17,72 @@ const zeroGTestnet = defineChain({
     rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
 });
 
-export async function deployTournament(agent1Hash: string, agent2Hash: string, category: string, id: bigint): Promise<string> {
-    const name = `tournament-${category}-${id}`;
-    console.log(`Deploying tournament ${name} to Phala Cloud...`);
+export async function deployTournament(agent1Hash: string, agent2Hash: string, appId: string): Promise<string> {
+    console.log(`Deploying tournament ${appId} to Phala Cloud...`);
     console.log(`Agent 1: ${agent1Hash}`);
     console.log(`Agent 2: ${agent2Hash}`);
 
-    if (!process.env.PHALA_API_KEY) {
-        throw new Error('PHALA_API_KEY environment variable is required');
+    if (!process.env.PHALA_CLOUD_API_KEY) {
+        throw new Error('PHALA_CLOUD_API_KEY environment variable is required');
     }
 
-    const composePath = path.resolve(__dirname, '../docker-compose.template.yml');
+    const client = createClient({ apiKey: process.env.PHALA_CLOUD_API_KEY });
+    const provision = await client.provisionCvm({
+        name: appId,
+        vcpu: 1,
+        memory: 2048,
+        diskSize: 20,
+        instance_type: "tdx.small",
+        compose_file: {
+            public_logs: true,
+            public_sysinfo: true,
+            gateway_enabled: true,
+            docker_compose_file: `
+services:
+  referee:
+    image: alexgubin/deviant-referee:v0.1.0
+    environment:
+      - AGENT1_URL=http://agent1:8080/move
+      - AGENT2_URL=http://agent2:8080/move
+    volumes:
+      - /var/run/dstack.sock:/var/run/dstack.sock
+    depends_on:
+      agent1:
+        condition: service_started
+      agent2:
+        condition: service_started
 
-    return new Promise((resolve, reject) => {
-        const args = [
-            'cvms', 'create',
-            '--name', name,
-            '--compose', composePath,
-            '--env', `AGENT1_HASH=${agent1Hash}`,
-            '--env', `AGENT2_HASH=${agent2Hash}`,
-            '--env', `TOURNAMENT_ID=${id}`
-        ];
+  agent1:
+    image: alexgubin/deviant-agent-base:v0.1.0
+    environment:
+      - SCRIPT_HASH=${agent1Hash}
+    volumes:
+      - agent1_data:/data
+      - /var/run/dstack.sock:/var/run/dstack.sock
 
-        console.log(`Executing: phala ${args.join(' ')}`);
+  agent2:
+    image: alexgubin/deviant-agent-base:v0.1.0
+    environment:
+      - SCRIPT_HASH=${agent2Hash}
+    volumes:
+      - agent2_data:/data
+      - /var/run/dstack.sock:/var/run/dstack.sock
 
-        // Executing the phala cli
-        const child = spawn('phala', args, { env: process.env });
-
-        let output = '';
-        child.stdout.on('data', (data) => {
-            const str = data.toString();
-            output += str;
-            console.log(`[Phala Deploy] ${str.trim()}`);
-        });
-        child.stderr.on('data', (data) => console.error(`[Phala Error] ${data.toString().trim()}`));
-
-        child.on('close', (code) => {
-            if (code !== 0) return reject(new Error(`Phala deployment failed with code ${code}`));
-            // Extract some ID from output if possible, otherwise return name
-            const match = output.match(/ID:\s*([a-zA-Z0-9-]+)/);
-            if (match) resolve(match[1]);
-            else resolve(name);
-        });
+volumes:
+  agent1_data:
+  agent2_data:
+`
+        }
     });
+
+    const cvm = await client.commitCvmProvision({
+        app_id: provision.app_id!,
+        compose_hash: provision.compose_hash!,
+    });
+
+    console.log("CVM deployed:", cvm);
+
+    return cvm.id.toString();
 }
 
 async function handleTournamentStarted(publicClient: PublicClient, tournamentAddress: `0x${string}`, category: string, id: bigint) {
@@ -109,7 +133,8 @@ async function handleTournamentStarted(publicClient: PublicClient, tournamentAdd
             }
         }
 
-        const taskId = await deployTournament(hashes[0], hashes[1], category, id);
+        const appId = `${category}-${id.toString()}`;
+        const taskId = await deployTournament(hashes[0], hashes[1], appId);
         console.log(`[Watcher] Deployment successful. Task ID: ${taskId}`);
 
     } catch (error) {

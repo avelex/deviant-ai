@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@0gfoundation/0g-ts-sdk": "^1.2.6",
+    "@phala/cloud": "^0.2.9",
     "dotenv": "^17.4.2",
     "viem": "^2.9.16"
   },
