@@ -17,9 +17,8 @@ const zeroGTestnet = defineChain({
     rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
 });
 
-export async function deployTournament(agent1Hash: string, agent2Hash: string): Promise<string> {
+export async function deployTournament(agent1Hash: string, agent2Hash: string, category: string, id: bigint): Promise<string> {
     console.log(`Deploying TAPP for agents: ${agent1Hash} vs ${agent2Hash}`);
-    return "random";
 
     const composePath = path.resolve(__dirname, '../docker-compose.template.yml');
 
@@ -36,7 +35,7 @@ export async function deployTournament(agent1Hash: string, agent2Hash: string): 
         const args = [
             '--host', 'localhost',
             '--port', '50051',
-            '--app-id', `chess-tourney-${Date.now()}`,
+            '--app-id', `${category}-${id}`,
             '--compose-file', composePath,
             '--use-owner'
         ];

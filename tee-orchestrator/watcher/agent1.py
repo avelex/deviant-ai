@@ -1,1 +1,0 @@
-def get_move(fen): return 'e2e4'
