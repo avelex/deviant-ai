@@ -1,7 +1,7 @@
-import { Indexer, ZgFile } from '@0gfoundation/0g-ts-sdk';
 import { ethers } from 'ethers';
 import * as path from 'path';
 import 'dotenv/config';
+import { Indexer, ZgFile } from '@0gfoundation/0g-ts-sdk';
 
 async function main() {
     const filePath = process.argv[2];

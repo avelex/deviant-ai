@@ -1,5 +1,3 @@
-import { spawn } from 'child_process';
-import * as path from 'path';
 import { createPublicClient, http, parseAbiItem, parseAbi, PublicClient } from 'viem';
 import { defineChain } from 'viem';
 import 'dotenv/config';

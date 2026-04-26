@@ -13,7 +13,8 @@ export class AgentExecutor {
             setTimeout,
             setInterval,
             process: { env: {} },
-            exports: {}
+            exports: {},
+            require: require // Pass global require to the sandbox
         });
     }
 

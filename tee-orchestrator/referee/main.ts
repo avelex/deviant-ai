@@ -17,12 +17,36 @@ async function requestMove(url: string, fen: string): Promise<string | null> {
     }
 }
 
+async function waitAgents() {
+    const agents = [
+        { name: "Agent 1", url: AGENT1_URL.replace("/move", "/health") },
+        { name: "Agent 2", url: AGENT2_URL.replace("/move", "/health") }
+    ];
+
+    console.log("Waiting for agents to be ready...");
+
+    for (const agent of agents) {
+        let ready = false;
+        while (!ready) {
+            try {
+                const resp = await axios.get(agent.url, { timeout: 2000 });
+                if (resp.status === 200) {
+                    ready = true;
+                    console.log(`${agent.name} is ready.`);
+                }
+            } catch (e) {
+                console.log(`Waiting for ${agent.name}...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+    }
+}
+
 async function playGame() {
+    await waitAgents();
+
     const board = new Chess();
     console.log("Starting chess match");
-
-    // Wait for agents to start
-    await new Promise(resolve => setTimeout(resolve, 10000));
 
     while (!board.isGameOver()) {
         const currentTurn = board.turn();
@@ -72,16 +96,19 @@ async function signAndAttest(result: any) {
 
         console.log(`Generating attestation for result hash: ${hash.toString('hex')}`);
 
-        // Derive key
-        const keyResult = await client.getKey('tournament-result');
-        
+        // Derive deterministic keys for blockchain applications
+        const walletKey = await client.getKey('wallet/ethereum', 'mainnet');
+        console.log('Derived key (32 bytes):', walletKey.key);        // secp256k1 private key
+        console.log('Signature chain:', walletKey.signature_chain);   // Authenticity proof
+
         // Get quote
         const quoteResult = await client.getQuote(hash);
 
         result.attestation = {
             quote: quoteResult.quote,
             hash: hash.toString('hex'),
-            signature: "mock-signature-using-derived-key"
+            key: walletKey.key,
+            signature_chain: walletKey.signature_chain
         };
     } catch (e: any) {
         console.error(`Failed to generate attestation: ${e.message}`);

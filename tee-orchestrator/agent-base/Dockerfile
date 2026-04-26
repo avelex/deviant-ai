@@ -3,7 +3,7 @@ FROM node:20-slim
 WORKDIR /app
 RUN apt-get update && apt-get install -y curl python3 build-essential && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY . .
 RUN npx tsc
 
