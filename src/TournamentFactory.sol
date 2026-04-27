@@ -73,7 +73,8 @@ contract TournamentFactory is Ownable {
             startTime: startTime,
             name: name,
             category: category,
-            id: id
+            id: id,
+            liveUri: ""
         });
 
         address instance = Clones.clone(tournamentImpl);
