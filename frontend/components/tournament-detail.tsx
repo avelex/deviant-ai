@@ -3,6 +3,7 @@
 import { Check, FileText, X, Settings } from "lucide-react";
 import { useState } from "react";
 import { TournamentData } from "@/lib/mock-data";
+import { LiveChessBoard } from "@/components/live-chess-board";
 
 interface TournamentDetailProps {
   data: TournamentData;
@@ -59,6 +60,13 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
             <h3 className="text-[11px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               LIVE BROADCAST
             </h3>
+            {data.status === "ACTIVE" || data.status === "LIVE" ? (
+               <LiveChessBoard liveUri={(data as any).liveUri || "ws://localhost:8080"} isActive={true} />
+            ) : (
+               <div className="flex items-center justify-center h-64 border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-xs font-bold tracking-widest uppercase">
+                 BROADCAST OFFLINE
+               </div>
+            )}
           </div>
 
           {/* Prediction Market / Bets Card */}

@@ -1,16 +1,26 @@
+"use client";
+
 import { Header } from "@/components/header";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { use } from "react";
 import { TournamentDetail } from "@/components/tournament-detail";
 import { mockTournamentDetail } from "@/lib/mock-data";
+import { useTournaments } from "@/hooks/use-tournaments";
 
 export default function TournamentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { tournaments, loading } = useTournaments();
 
-  // In a real app, you would fetch data using the 'id'
-  // const data = await fetchTournament(id);
-  const data = mockTournamentDetail;
+  const activeTournament = tournaments.find(t => t.id === id);
+
+  // Fallback to mock data structure for properties we don't fetch yet, while injecting real status and liveUri
+  const data = activeTournament ? {
+    ...mockTournamentDetail,
+    title: activeTournament.title,
+    status: activeTournament.status === 'LIVE' ? 'ACTIVE' : activeTournament.status,
+    liveUri: activeTournament.liveUri
+  } : mockTournamentDetail;
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300">
@@ -19,7 +29,6 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
       <main className="flex-1 pt-24 pb-12 px-4 md:px-8 lg:px-12">
         <div className="max-w-[1200px] mx-auto">
           
-          {/* Header Area */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-6">
               <Link href="/" className="inline-flex items-center text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF] transition-colors">
@@ -32,7 +41,11 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
-            <TournamentDetail data={data} />
+            {loading ? (
+                <div className="text-center py-20 animate-pulse text-slate-500">LOADING DETAILS...</div>
+            ) : (
+                <TournamentDetail data={data} />
+            )}
           </div>
           
         </div>

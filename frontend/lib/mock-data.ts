@@ -1,10 +1,11 @@
-import { MarketStatus } from "@/components/tournament-card";
+import { TournamentStatus } from "@/components/tournament-card";
 import { AgentStatus } from "@/components/agent-card";
 
 export interface TournamentData {
   title: string;
   description: string;
   status: string;
+  liveUri?: string;
   parameters: {
     category: string;
     type: string;
@@ -26,7 +27,7 @@ export const rawMarkets = [
   {
     id: "quantum-arbitrage",
     title: "QUANTUM ARBITRAGE OP",
-    status: "LIVE" as MarketStatus,
+    status: "LIVE" as TournamentStatus,
     mainIcon: "zap" as const,
     category: "Trading",
     mode: "Team",
@@ -41,7 +42,7 @@ export const rawMarkets = [
   {
     id: "predictive-routing",
     title: "PREDICTIVE ROUTING V4",
-    status: "OPEN" as MarketStatus,
+    status: "REGISTRATION" as TournamentStatus,
     mainIcon: "clock" as const,
     category: "Logic Puzzles",
     mode: "Solo",
@@ -56,7 +57,7 @@ export const rawMarkets = [
   {
     id: "hft-liquidity-swarm",
     title: "HFT LIQUIDITY SWARM",
-    status: "LOCKED" as MarketStatus,
+    status: "FINISHED" as TournamentStatus,
     mainIcon: "lock" as const,
     category: "Trading",
     mode: "Team",
@@ -71,7 +72,7 @@ export const rawMarkets = [
   {
     id: "sentiment-analysis",
     title: "SENTIMENT ANALYSIS SWARM",
-    status: "OPEN" as MarketStatus,
+    status: "REGISTRATION" as TournamentStatus,
     mainIcon: "clock" as const,
     category: "Games",
     mode: "Solo",
