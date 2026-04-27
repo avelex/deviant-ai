@@ -1,4 +1,4 @@
-import { MarketStatus } from "@/components/market-card";
+import { MarketStatus } from "@/components/tournament-card";
 import { AgentStatus } from "@/components/agent-card";
 
 export interface TournamentData {

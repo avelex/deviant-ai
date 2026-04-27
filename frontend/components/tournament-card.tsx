@@ -2,12 +2,12 @@ import { Zap, Clock, Lock, User, Users, LayoutGrid as CategoryIcon, Timer, Calen
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-export type MarketStatus = 'LIVE' | 'OPEN' | 'LOCKED';
+export type TournamentStatus = 'LIVE' | 'REGISTRATION' | 'ENDED';
 
-interface MarketCardProps {
+interface TournamentCardProps {
   id: string;
   title: string;
-  status: MarketStatus;
+  status: TournamentStatus;
   mainIcon: 'zap' | 'clock' | 'lock';
   category: string;
   mode: string;
@@ -17,16 +17,16 @@ interface MarketCardProps {
   reward: string;
 }
 
-export function MarketCard({ id, title, status, mainIcon, category, mode, slots, timeLabel, timeValue, reward }: MarketCardProps) {
+export function TournamentCard({ id, title, status, mainIcon, category, mode, slots, timeLabel, timeValue, reward }: TournamentCardProps) {
   const isLive = status === 'LIVE';
-  const isOpen = status === 'OPEN';
-  const isLocked = status === 'LOCKED';
+  const isOpen = status === 'REGISTRATION';
+  const isLocked = status === 'ENDED';
 
   const MainIconComponent = mainIcon === 'zap' ? Zap : mainIcon === 'clock' ? Clock : Lock;
   const TimeIcon = isLive ? Timer : isOpen ? Calendar : Flag;
 
   return (
-    <Link 
+    <Link
       href={`/tournaments/${id}`}
       className={cn(
         "group block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 transition-all duration-300 relative overflow-hidden backdrop-blur-md rounded-none",
@@ -49,12 +49,12 @@ export function MarketCard({ id, title, status, mainIcon, category, mode, slots,
             isOpen && "border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400",
             isLocked && "border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-500"
           )}>
-            <MainIconComponent 
-               size={28} 
-               className={cn(
-                 isLive ? 'text-[#00E5FF] fill-[#00E5FF]' : isLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-400'
-               )} 
-               strokeWidth={isLive ? 1 : 2} 
+            <MainIconComponent
+              size={28}
+              className={cn(
+                isLive ? 'text-[#00E5FF] fill-[#00E5FF]' : isLocked ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-400'
+              )}
+              strokeWidth={isLive ? 1 : 2}
             />
           </div>
 
@@ -79,23 +79,23 @@ export function MarketCard({ id, title, status, mainIcon, category, mode, slots,
                 <CategoryIcon size={14} className="text-slate-400 dark:text-slate-500" />
                 <span>CATEGORY: <span className="text-[#131b2e] dark:text-slate-200">{category}</span></span>
               </div>
-              
+
               <div className="hidden md:block w-px h-3 bg-slate-200 dark:bg-slate-700"></div>
-              
+
               <div className="flex items-center gap-2">
                 <Users size={14} className="text-slate-400 dark:text-slate-500" />
                 <span>MODE: <span className="text-[#131b2e] dark:text-slate-200">{mode}</span></span>
               </div>
-              
+
               <div className="hidden md:block w-px h-3 bg-slate-200 dark:bg-slate-700"></div>
-              
+
               <div className="flex items-center gap-2">
                 <User size={14} className="text-slate-400 dark:text-slate-500" />
                 <span>SLOTS: <span className="text-[#131b2e] dark:text-slate-200">{slots}</span></span>
               </div>
-              
+
               <div className="hidden md:block w-px h-3 bg-slate-200 dark:bg-slate-700"></div>
-              
+
               <div className="flex items-center gap-2 text-[#131b2e] dark:text-slate-200">
                 <TimeIcon size={14} className={isLive ? 'text-[#00E5FF]' : 'text-slate-400 dark:text-slate-500'} />
                 <span className={cn(isLive ? 'text-[#00E5FF]' : 'text-[#131b2e] dark:text-slate-200')}>
