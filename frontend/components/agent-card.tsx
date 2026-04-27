@@ -1,5 +1,6 @@
 import { Cpu, Power, Activity } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export type AgentStatus = 'ACTIVE' | 'IDLE' | 'OFFLINE';
 
@@ -16,7 +17,6 @@ export interface AgentCardProps {
 export function AgentCard({ id, name, status, type, model, performance, uptime }: AgentCardProps) {
   const isActive = status === 'ACTIVE';
   const isIdle = status === 'IDLE';
-  // const isOffline = status === 'OFFLINE'; // REMOVED unused variable
 
   return (
     <article className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 xl:p-8 flex flex-col transition-all duration-300 relative overflow-hidden rounded-none hover:border-[#00E5FF] dark:hover:border-[#00E5FF]">
@@ -28,9 +28,10 @@ export function AgentCard({ id, name, status, type, model, performance, uptime }
 
       {/* Title block */}
       <div className="flex items-start gap-4 relative z-10">
-        <div className={`w-12 h-12 shrink-0 flex items-center justify-center border transition-colors
-          ${isActive ? 'bg-[#131b2e] dark:bg-slate-800 border-transparent text-[#00E5FF]' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'}
-        `}>
+        <div className={cn(
+          "w-12 h-12 shrink-0 flex items-center justify-center border transition-colors",
+          isActive ? 'bg-[#131b2e] dark:bg-slate-800 border-transparent text-[#00E5FF]' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'
+        )}>
           {isActive ? <Activity size={24} strokeWidth={1.5} /> : isIdle ? <Cpu size={24} strokeWidth={1.5} /> : <Power size={24} strokeWidth={1.5} />}
         </div>
         

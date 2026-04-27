@@ -4,6 +4,7 @@ import { Bell, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './theme-toggle';
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const pathname = usePathname();
@@ -21,13 +22,19 @@ export function Header() {
         <nav className="hidden md:flex gap-8 items-center h-full pt-1">
           <Link 
             href="/" 
-            className={`${isTournamentsActive ? 'text-[#00E5FF] border-b-2 border-[#00E5FF]' : 'text-slate-500 dark:text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF] transition-colors'} pb-1 h-full flex items-center font-medium`}
+            className={cn(
+              "pb-1 h-full flex items-center font-medium transition-colors",
+              isTournamentsActive ? 'text-[#00E5FF] border-b-2 border-[#00E5FF]' : 'text-slate-500 dark:text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF]'
+            )}
           >
             Tournaments
           </Link>
           <Link 
             href="/agents" 
-            className={`${isAgentsActive ? 'text-[#00E5FF] border-b-2 border-[#00E5FF]' : 'text-slate-500 dark:text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF] transition-colors'} pb-1 h-full flex items-center font-medium`}
+            className={cn(
+              "pb-1 h-full flex items-center font-medium transition-colors",
+              isAgentsActive ? 'text-[#00E5FF] border-b-2 border-[#00E5FF]' : 'text-slate-500 dark:text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF]'
+            )}
           >
             Agents
           </Link>

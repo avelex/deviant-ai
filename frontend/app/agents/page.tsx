@@ -1,97 +1,17 @@
-"use client";
-
-import { useState } from "react";
 import { Header } from "@/components/header";
-import { AgentCard, AgentStatus } from "@/components/agent-card";
-import { Plus } from "lucide-react";
-import { DeployAgentModal } from "@/components/deploy-agent-modal";
-
-const mockAgents = [
-  {
-    id: "agt-88x9",
-    name: "NEXUS ARBITRAGE v2",
-    status: "ACTIVE" as AgentStatus,
-    type: "DEFI TRADING",
-    model: "CLAUDE-3.5-SONNET",
-    performance: "+12.4% / 7D",
-    uptime: "142H 12M",
-  },
-  {
-    id: "agt-12b4",
-    name: "SENTIMENT SCRAPER",
-    status: "ACTIVE" as AgentStatus,
-    type: "DATA AGGREGATION",
-    model: "GPT-4o-MINI",
-    performance: "1.2M REQ / 24H",
-    uptime: "21D 04H",
-  },
-  {
-    id: "agt-99f1",
-    name: "LIQUIDITY SNIPER",
-    status: "IDLE" as AgentStatus,
-    type: "HFT",
-    model: "CUSTOM RUST / ONNX",
-    performance: "WAITING FOR TARGET",
-    uptime: "00H 45M",
-  },
-  {
-    id: "agt-44c2",
-    name: "PREDICTIVE LOGIC ZERO",
-    status: "OFFLINE" as AgentStatus,
-    type: "GENERAL REASONING",
-    model: "GEMINI 3.1 PRO",
-    performance: "YIELD: N/A",
-    uptime: "OFFLINE",
-  },
-];
+import { AgentDashboard } from "@/components/agent-dashboard";
+import { mockAgents } from "@/lib/mock-data";
 
 export default function AgentsPage() {
-  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
-
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300">
       <Header />
       
       <main className="flex-1 pt-24 pb-12 px-4 md:px-8 lg:px-12">
         <div className="max-w-[1200px] mx-auto">
-          {/* Page Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 border-b border-slate-200 dark:border-slate-800 pb-4 gap-6 md:gap-0">
-            <div>
-              <h1 className="font-display text-4xl md:text-[48px] font-light text-[#131b2e] dark:text-white uppercase tracking-tighter leading-none mb-2">
-                Deployed Agents
-              </h1>
-              <p className="text-slate-500 font-medium">
-                Manage, monitor, and deploy autonomous execution entities.
-              </p>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex w-full md:w-auto mt-4 md:mt-0">
-              <button 
-                onClick={() => setIsDeployModalOpen(true)}
-                className="w-full md:w-auto flex items-center justify-center gap-2 border border-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF] hover:text-black text-[#00E5FF] px-6 py-3 text-[12px] font-bold tracking-widest uppercase transition-all rounded-none hover:shadow-[0_0_15px_rgba(0,229,255,0.4)]"
-              >
-                <Plus size={16} strokeWidth={2.5} />
-                DEPLOY NEW AGENT
-              </button>
-            </div>
-          </div>
-
-          {/* Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 w-full transition-all">
-            {mockAgents.map((agent, i) => (
-              <div key={agent.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full" style={{ animationDelay: `${Math.min(i * 100, 300)}ms` }}>
-                <AgentCard {...agent} />
-              </div>
-            ))}
-          </div>
+          <AgentDashboard initialAgents={mockAgents} />
         </div>
       </main>
-
-      <DeployAgentModal 
-        isOpen={isDeployModalOpen}
-        onClose={() => setIsDeployModalOpen(false)}
-      />
     </div>
   );
 }
