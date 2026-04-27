@@ -5,3 +5,11 @@ node_modules/
 out/
 .env
 broadcast
+
+node_modules/
+.next/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
