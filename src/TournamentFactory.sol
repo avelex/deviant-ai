@@ -88,4 +88,13 @@ contract TournamentFactory is Ownable {
     function notifyTournamentStarted(string calldata category, uint256 id) external onlyTournament {
         emit TournamentStarted(msg.sender, category, id);
     }
+
+    // todo refactor to better performance
+    function getTournaments() external view returns (address[] memory) {
+        address[] memory result = new address[](tournaments.length());
+        for (uint256 i = 0; i < tournaments.length(); i++) {
+            result[i] = tournaments.at(i);
+        }
+        return result;
+    }
 }

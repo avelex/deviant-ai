@@ -3,6 +3,7 @@ import { Chess } from 'chess.js';
 import { DstackClient } from '@phala/dstack-sdk';
 import express from 'express';
 import { createPublicClient, http, parseAbiItem, parseAbi, defineChain, PublicClient } from 'viem';
+import { WebSocketServer, WebSocket } from 'ws';
 
 import { toViemAccountSecure } from '@phala/dstack-sdk/viem';
 import { keccak256, encodePacked } from 'viem';
@@ -31,6 +32,18 @@ let gameResult: any = null;
 let identity: any = null;
 let isGameStarted = false;
 let agentIds: bigint[] = [];
+
+let wss: WebSocketServer;
+
+function broadcastMove(agentId: string, move: string) {
+    if (!wss) return;
+    const data = JSON.stringify({ agent: agentId, move });
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(data);
+        }
+    });
+}
 
 async function getEthereumIdentity() {
     if (identity) return identity;
@@ -103,6 +116,7 @@ async function playGame() {
         const currentTurn = board.turn();
         const url = currentTurn === 'w' ? AGENT1_URL : AGENT2_URL;
         const playerName = currentTurn === 'w' ? agent1Name : agent2Name;
+        const agentId = currentTurn === 'w' ? agent1Id : agent2Id;
 
         console.log(`Turn: ${playerName}`);
         const moveStr = await requestMove(url, board.fen());
@@ -115,6 +129,8 @@ async function playGame() {
             const winnerId = currentTurn === 'w' ? agent2Id : agent1Id;
             return { winnerId, reason: "timeout_or_error", pgn: board.pgn() };
         }
+
+        broadcastMove(agentId, moveStr);
 
         try {
             const move = board.move(moveStr);
@@ -262,8 +278,14 @@ app.get('/result', (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Referee HTTP server listening on port ${PORT}`);
+
+    wss = new WebSocketServer({ server });
+    wss.on('connection', (ws) => {
+        console.log('[Referee] New WebSocket client connected');
+        ws.on('close', () => console.log('[Referee] WebSocket client disconnected'));
+    });
 
     if (TOURNAMENT_ADDRESS) {
         listenForTournamentStart();

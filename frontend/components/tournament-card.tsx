@@ -2,7 +2,7 @@ import { Zap, Clock, Lock, User, Users, LayoutGrid as CategoryIcon, Timer, Calen
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-export type TournamentStatus = 'LIVE' | 'REGISTRATION' | 'ENDED';
+export type TournamentStatus = 'LIVE' | 'REGISTRATION' | 'FINISHED';
 
 interface TournamentCardProps {
   id: string;
@@ -20,7 +20,7 @@ interface TournamentCardProps {
 export function TournamentCard({ id, title, status, mainIcon, category, mode, slots, timeLabel, timeValue, reward }: TournamentCardProps) {
   const isLive = status === 'LIVE';
   const isOpen = status === 'REGISTRATION';
-  const isLocked = status === 'ENDED';
+  const isLocked = status === 'FINISHED';
 
   const MainIconComponent = mainIcon === 'zap' ? Zap : mainIcon === 'clock' ? Clock : Lock;
   const TimeIcon = isLive ? Timer : isOpen ? Calendar : Flag;

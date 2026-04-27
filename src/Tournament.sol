@@ -34,6 +34,11 @@ contract Tournament is ITournament, Initializable {
         _;
     }
 
+    modifier onlyOwner() {
+        require(msg.sender == config.owner, "Not owner");
+        _;
+    }
+
     function initialize(ITournament.Config memory _config, address _agentNFT, address _factory) public initializer {
         factory = ITournamentFactory(_factory);
         config = _config;
@@ -48,16 +53,6 @@ contract Tournament is ITournament, Initializable {
         require(!agents.contains(_agentId), "Agent already joined");
         require(agents.length() < config.maxSlots, "Tournament is full");
         require(config.tee != address(0), "Tournament not yet have TEE address");
-
-        // address[] memory authorized = agentNFTContract.authorizedUsersOf(agentId);
-        // bool isAuthorized = false;
-        // for (uint256 i = 0; i < authorized.length; i++) {
-        //     if (authorized[i] == config.tee) {
-        //         isAuthorized = true;
-        //         break;
-        //     }
-        // }
-        // require(isAuthorized, "TEE is not authorized");
 
         agents.set(_agentId, msg.sender);
         totalEntryFees += msg.value;
@@ -142,6 +137,11 @@ contract Tournament is ITournament, Initializable {
         require(_tee != address(0), "Invalid TEE address");
 
         config.tee = _tee;
+    }
+
+    function setLiveUri(string calldata _liveUri) external onlyOwner {
+        require(state == ITournament.State.Registration, "Not in Registration state");
+        config.liveUri = _liveUri;
     }
 
     function getAgentKeys() public view returns (uint256[] memory) {

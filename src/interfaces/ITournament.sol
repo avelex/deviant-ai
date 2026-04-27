@@ -9,9 +9,11 @@ interface ITournament {
         uint256 maxSlots;
         uint16 feeRate;
         uint256 startTime;
+
+        uint256 id;
         string name;
         string category;
-        uint256 id;
+        string liveUri;
     }
 
     enum State {
