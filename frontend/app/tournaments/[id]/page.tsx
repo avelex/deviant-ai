@@ -17,6 +17,8 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
   // Fallback to mock data structure for properties we don't fetch yet, while injecting real status and liveUri
   const data = activeTournament ? {
     title: activeTournament.title,
+    owner: activeTournament.owner,
+    address: activeTournament.address,
     status: activeTournament.status === 'LIVE' ? 'ACTIVE' : activeTournament.status,
     liveUri: activeTournament.liveUri,
     roster: {
