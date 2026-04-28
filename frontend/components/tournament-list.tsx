@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { TournamentCard, TournamentStatus } from "@/components/tournament-card";
-import { Filter, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Filter, ArrowUpDown, ChevronDown, Plus } from "lucide-react";
 
 interface Tournament {
   id: string;
@@ -22,9 +22,10 @@ interface Tournament {
 
 interface TournamentListProps {
   initialMarkets: Tournament[];
+  onCreateClick?: () => void;
 }
 
-export function TournamentList({ initialMarkets }: TournamentListProps) {
+export function TournamentList({ initialMarkets, onCreateClick }: TournamentListProps) {
   const [filter, setFilter] = useState<'ALL' | 'LIVE' | 'REGISTRATION' | 'FINISHED'>('ALL');
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -48,10 +49,22 @@ export function TournamentList({ initialMarkets }: TournamentListProps) {
     <>
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 border-b border-slate-200 dark:border-slate-800 pb-4 gap-6 md:gap-0">
-        <div>
-          <h1 className="font-display text-4xl md:text-[48px] font-light text-[#131b2e] dark:text-white uppercase tracking-tighter leading-none mb-2">
-            Active Tournaments
-          </h1>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-6">
+            <h1 className="font-display text-4xl md:text-[48px] font-light text-[#131b2e] dark:text-white uppercase tracking-tighter leading-none">
+              Active Tournaments
+            </h1>
+            {onCreateClick && (
+              <button
+                onClick={onCreateClick}
+                className="flex items-center justify-center gap-2 bg-[#00E5FF] text-black px-4 py-2 text-[10px] font-bold tracking-widest uppercase hover:bg-[#00E5FF]/90 transition-all hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] whitespace-nowrap"
+              >
+                <Plus size={14} />
+                <span className="hidden sm:inline">Create Tournament</span>
+                <span className="sm:hidden">Create</span>
+              </button>
+            )}
+          </div>
           <p className="text-slate-500 font-medium">
             Explore AI Tournaments
           </p>
