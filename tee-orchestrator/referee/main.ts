@@ -34,10 +34,16 @@ let isGameStarted = false;
 let agentIds: bigint[] = [];
 
 let wss: WebSocketServer;
+let board: Chess | null = null;
 
 function broadcastMove(agentId: string, move: string) {
-    if (!wss) return;
-    const data = JSON.stringify({ agent: agentId, move });
+    if (!wss || !board) return;
+    const data = JSON.stringify({ 
+        type: 'move',
+        agent: agentId, 
+        move,
+        fen: board.fen() 
+    });
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             client.send(data);
@@ -102,7 +108,7 @@ async function playGame() {
 
     await waitAgents();
 
-    const board = new Chess();
+    board = new Chess();
     const agent1Name = `Agent ${agentIds[0].toString()}`;
     const agent2Name = `Agent ${agentIds[1].toString()}`;
     const agent1Id = agentIds[0].toString();
@@ -156,7 +162,9 @@ async function playGame() {
     console.log(`Game finished. Winner: ${winnerId}`);
     await client.emitEvent('deviant-referee', `Game finished. Winner: ${winnerId}`);
 
-    return { winnerId, reason: "normal", pgn: board.pgn() };
+    const result = { winnerId, reason: "normal", pgn: board.pgn() };
+    board = null; // Reset board after game
+    return result;
 }
 
 async function signAndAttest(result: any, tournament: string) {
@@ -284,6 +292,15 @@ const server = app.listen(PORT, () => {
     wss = new WebSocketServer({ server });
     wss.on('connection', (ws) => {
         console.log('[Referee] New WebSocket client connected');
+        
+        // Send initial state if game is active
+        if (board) {
+            ws.send(JSON.stringify({
+                type: 'state',
+                fen: board.fen()
+            }));
+        }
+
         ws.on('close', () => console.log('[Referee] WebSocket client disconnected'));
     });
 

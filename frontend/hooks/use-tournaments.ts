@@ -32,86 +32,92 @@ export function useTournaments() {
   const [loading, setLoading] = useState(true);
   const publicClient = usePublicClient();
 
-  const { data: addresses, isLoading: isAddressesLoading } = useReadContract({
+  const { data: addresses, isLoading: isAddressesLoading, refetch: refetchAddresses } = useReadContract({
     address: FACTORY_ADDRESS,
     abi: TOURNAMENT_FACTORY_ABI,
     functionName: 'getTournaments',
   });
 
-  useEffect(() => {
-    async function fetchTournamentDetails() {
-      if (!addresses || !publicClient) return;
+  const fetchTournamentDetails = async () => {
+    if (!addresses || !publicClient) return;
+    setLoading(true);
 
-      try {
-        const results = await Promise.all((addresses as `0x${string}`[]).map(async (address) => {
-          const config = await publicClient.readContract({
+    try {
+      const results = await Promise.all((addresses as `0x${string}`[]).map(async (address) => {
+        const config = await publicClient.readContract({
+          address,
+          abi: TOURNAMENT_ABI,
+          functionName: 'config'
+        }) as any;
+
+        const state = await publicClient.readContract({
+          address,
+          abi: TOURNAMENT_ABI,
+          functionName: 'state'
+        }) as number;
+
+        let agentKeys: bigint[] = [];
+        try {
+          agentKeys = await publicClient.readContract({
             address,
             abi: TOURNAMENT_ABI,
-            functionName: 'config'
-          }) as any;
+            functionName: 'getAgentKeys'
+          }) as bigint[];
+        } catch (e) {
+          console.error("Failed to fetch agent keys", e);
+        }
 
-          const state = await publicClient.readContract({
-            address,
-            abi: TOURNAMENT_ABI,
-            functionName: 'state'
-          }) as number;
+        const statusMap: Record<number, TournamentStatus> = {
+          0: 'REGISTRATION',
+          1: 'LIVE',
+          2: 'FINISHED'
+        };
 
-          let agentKeys: bigint[] = [];
-          try {
-            agentKeys = await publicClient.readContract({
-              address,
-              abi: TOURNAMENT_ABI,
-              functionName: 'getAgentKeys'
-            }) as bigint[];
-          } catch (e) {
-            console.error("Failed to fetch agent keys", e);
-          }
+        return {
+          id: config[6].toString(),
+          title: config[7],
+          status: statusMap[state] || 'FINISHED',
+          mainIcon: state === 1 ? 'zap' : state === 0 ? 'clock' : 'lock',
+          category: config[8],
+          mode: 'Solo',
+          slots: `${agentKeys.length}/${config[3].toString()}`,
+          timeLabel: state === 0 ? 'STARTS AT' : 'ENDED',
+          timeValue: new Date(Number(config[5]) * 1000).toLocaleString(),
+          reward: `${Number(1)} 0G`,
+          rewardValue: Number(config[2]),
+          closesAt: 0,
+          createdAt: Number(config[6]) * 1000,
+          address: address,
+          owner: config[0],
+          teeAddress: config[1],
+          liveUri: config[9],
+          rawState: state,
+          slotPrice: BigInt(config[2]),
+          startTime: Number(config[5]) * 1000,
+          agentKeys: agentKeys.map(k => k.toString())
+        } as ContractTournament;
+      }));
 
-          const statusMap: Record<number, TournamentStatus> = {
-            0: 'REGISTRATION',
-            1: 'LIVE',
-            2: 'FINISHED'
-          };
-
-          return {
-            id: config[6].toString(),
-            title: config[7],
-            status: statusMap[state] || 'FINISHED',
-            mainIcon: state === 1 ? 'zap' : state === 0 ? 'clock' : 'lock',
-            category: config[8],
-            mode: 'Solo',
-            slots: `${agentKeys.length}/${config[3].toString()}`,
-            timeLabel: state === 0 ? 'STARTS AT' : 'ENDED',
-            timeValue: new Date(Number(config[5]) * 1000).toLocaleString(),
-            reward: `${Number(1)} 0G`,
-            rewardValue: Number(config[2]),
-            closesAt: 0,
-            createdAt: Number(config[6]) * 1000,
-            address: address,
-            owner: config[0],
-            teeAddress: config[1],
-            liveUri: config[9],
-            rawState: state,
-            slotPrice: BigInt(config[2]),
-            startTime: Number(config[5]) * 1000,
-            agentKeys: agentKeys.map(k => k.toString())
-          } as ContractTournament;
-        }));
-
-        setTournaments(results);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+      setTournaments(results);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     if (addresses) {
       fetchTournamentDetails();
     } else if (!isAddressesLoading && loading) {
       setLoading(false);
     }
-  }, [addresses, publicClient, isAddressesLoading, loading]);
+  }, [addresses, publicClient, isAddressesLoading]);
 
-  return { tournaments, loading: loading || isAddressesLoading };
+  const refresh = async () => {
+    await refetchAddresses();
+    await fetchTournamentDetails();
+  };
+
+  return { tournaments, loading: loading || isAddressesLoading, refresh };
 }

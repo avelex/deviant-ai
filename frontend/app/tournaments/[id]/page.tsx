@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/header";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, RefreshCw } from "lucide-react";
 import { use } from "react";
 import { TournamentDetail } from "@/components/tournament-detail";
 import { useTournaments } from "@/hooks/use-tournaments";
@@ -10,7 +10,7 @@ import { TournamentData } from "@/lib/mock-data";
 
 export default function TournamentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { tournaments, loading } = useTournaments();
+  const { tournaments, loading, refresh } = useTournaments();
 
   const activeTournament = tournaments.find(t => t.id === id);
 
@@ -56,18 +56,29 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
         <div className="max-w-[1200px] mx-auto">
 
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-6">
-              <Link href="/" className="inline-flex items-center text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF] transition-colors">
-                <ChevronLeft size={16} strokeWidth={2} />
-              </Link>
-              <div className="flex items-center gap-2 text-[11px] font-bold tracking-widest uppercase text-slate-500">
-                <Link href="/" className="hover:text-[#131b2e] dark:hover:text-white transition-colors">HUB</Link>
-                <span className="text-slate-300 dark:text-slate-700">/</span>
-                <span className="text-[#131b2e] dark:text-white">DETAIL</span>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Link href="/" className="inline-flex items-center text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF] transition-colors">
+                  <ChevronLeft size={16} strokeWidth={2} />
+                </Link>
+                <div className="flex items-center gap-2 text-[11px] font-bold tracking-widest uppercase text-slate-500">
+                  <Link href="/" className="hover:text-[#131b2e] dark:hover:text-white transition-colors">HUB</Link>
+                  <span className="text-slate-300 dark:text-slate-700">/</span>
+                  <span className="text-[#131b2e] dark:text-white">DETAIL</span>
+                </div>
               </div>
+              
+              <button 
+                onClick={() => refresh()}
+                disabled={loading}
+                className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-800 hover:border-[#00E5FF] text-[10px] font-bold tracking-widest uppercase text-slate-500 hover:text-[#00E5FF] transition-all disabled:opacity-50"
+              >
+                <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                REFRESH
+              </button>
             </div>
 
-            {loading ? (
+            {loading && !activeTournament ? (
               <div className="text-center py-20 animate-pulse text-slate-500">LOADING DETAILS...</div>
             ) : (
               <TournamentDetail data={data as TournamentData} />
