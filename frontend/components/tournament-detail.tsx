@@ -32,7 +32,7 @@ function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: stri
 
   if (!isJoining) {
     return (
-      <button 
+      <button
         onClick={() => setIsJoining(true)}
         className="w-full border border-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF] hover:text-black text-[#00E5FF] p-4 flex items-center justify-center mt-2 transition-all font-bold tracking-widest uppercase text-[11px] shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]"
       >
@@ -51,14 +51,14 @@ function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: stri
         className="bg-transparent border-b border-[#00E5FF]/50 text-[#00E5FF] text-xs py-2 px-1 outline-none placeholder:text-[#00E5FF]/30 font-bold tracking-widest"
       />
       <div className="flex gap-2">
-        <button 
+        <button
           onClick={handleJoin}
           disabled={isPending}
           className="flex-1 bg-[#00E5FF] text-black p-2 text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
         >
           {isPending ? "JOINING..." : "CONFIRM JOIN"}
         </button>
-        <button 
+        <button
           onClick={() => setIsJoining(false)}
           className="px-3 border border-slate-700 text-slate-500 hover:text-white text-[10px] font-bold tracking-widest uppercase"
         >
@@ -136,24 +136,24 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start mt-8">
 
         {/* LEFT COLUMN */}
-        <div className="lg:col-span-2 flex flex-col gap-6 lg:gap-8">
+        <div className="lg:col-span-2 flex flex-col gap-6 lg:gap-3">
 
           {/* Live Broadcast Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8">
-            <h3 className="text-[11px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
+            <h3 className="font-display text-xl md:text-2xl font-light text-[#131b2e] dark:text-white uppercase mt-1mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
               LIVE BROADCAST
             </h3>
             {data.status === "ACTIVE" || data.status === "LIVE" ? (
-               <LiveChessBoard liveUri={(data as any).liveUri || "ws://localhost:8080"} isActive={true} />
+              <LiveChessBoard liveUri={(data as any).liveUri || "ws://localhost:8080"} isActive={true} />
             ) : (
-               <div className="flex items-center justify-center h-64 border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-xs font-bold tracking-widest uppercase">
-                 BROADCAST OFFLINE
-               </div>
+              <div className="flex items-center justify-center h-64 border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-xs font-bold tracking-widest uppercase">
+                BROADCAST OFFLINE
+              </div>
             )}
           </div>
 
           {/* Live Broadcast Result Panel */}
-          <TournamentResult 
+          <TournamentResult
             tournamentAddress={data.address!}
             liveUri={(data as any).liveUri}
           />
@@ -204,13 +204,13 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="flex flex-col gap-6 lg:gap-8">
+        <div className="flex flex-col gap-5 lg:gap-3">
 
           {/* Competitor Roster Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8 pt-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50 pb-4 mb-6 mt-1">
-              <h3 className="text-[11px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
-                COMPETITOR ROSTER
+              <h3 className="font-display text-xl md:text-2xl font-light text-[#131b2e] dark:text-white uppercase mt-1">
+                DEVIANTS
               </h3>
               <div className="text-[9px] font-bold tracking-wider uppercase bg-slate-100 dark:bg-slate-800 text-[#131b2e] dark:text-slate-300 px-2 py-1">
                 {data.roster.filledDisplay}
@@ -230,9 +230,6 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono tracking-wide">{player.address}</span>
                     </div>
                   </div>
-                  <div className="w-[18px] h-[18px] rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-white dark:text-slate-900 shrink-0">
-                    <Check size={10} strokeWidth={4} />
-                  </div>
                 </div>
               ))}
 
@@ -244,14 +241,6 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                 if (isRegistrationOpen && isNotFull && data.address && data.slotPrice !== undefined) {
                   return <JoinSection tournamentAddress={data.address} slotPrice={data.slotPrice} />;
                 }
-
-                return (
-                  <div className="border border-dashed border-slate-300 dark:border-slate-700 p-4 flex items-center justify-center mt-2">
-                    <span className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500">
-                      AWAITING AGENT
-                    </span>
-                  </div>
-                );
               })()}
             </div>
           </div>
@@ -340,9 +329,9 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                 const canStart = isRegistrationOpen && isFull && isTime && isOwner;
 
                 return (
-                  <StartTournamentButton 
-                    tournamentAddress={data.address!} 
-                    disabled={!canStart} 
+                  <StartTournamentButton
+                    tournamentAddress={data.address!}
+                    disabled={!canStart}
                   />
                 );
               })()}

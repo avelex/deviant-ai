@@ -83,8 +83,8 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8 mt-6 lg:mt-8">
-      <h3 className="text-[11px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
-        LIVE BROADCAST RESULT
+      <h3 className="font-display text-xl md:text-2xl font-light text-[#131b2e] dark:text-white uppercase mt-1 mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
+        TOURNAMENT RESULT
       </h3>
 
       {/* Game Section */}
