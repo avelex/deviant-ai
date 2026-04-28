@@ -1,6 +1,0 @@
-- [x] Task 1: Update Watcher Dependencies
-- [x] Task 2: Implement TEE Downloader Init Container
-- [x] Task 3: Update Docker Compose Template
-- [x] Task 4: Refactor Python Referee Storage Decryption
-- [x] Task 5: Refactor Watcher Index to use Viem and Listen to Events
-- [x] Task 6: Refactor E2E Flow Test

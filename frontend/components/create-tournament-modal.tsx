@@ -20,7 +20,7 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
     maxSlots: "2",
     slotPrice: "0",
     feeRate: "0",
-    startTime: new Date(Date.now()).toISOString().slice(0, 16), // Default to 1 hour from now
+    startedAt: Math.floor(Date.now() + 5 * 60 * 1000) / 1000
   });
 
   const { writeContract, data: hash, isPending, error } = useWriteContract();
@@ -49,7 +49,8 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
           parseEther(formData.slotPrice),
           BigInt(formData.maxSlots),
           Number(BigInt(Math.floor(parseFloat(formData.feeRate) * 100))), // Convert to basis points
-          BigInt(Math.floor(new Date(formData.startTime).getTime() / 1000)),
+          BigInt(formData.startedAt),
+          BigInt(0)
         ],
       });
     } catch (err) {
@@ -159,8 +160,13 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
               </label>
               <input
                 type="datetime-local"
-                value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                value={new Date(formData.startedAt * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                onChange={(e) => {
+                  const newTime = new Date(e.target.value).getTime();
+                  if (!isNaN(newTime)) {
+                    setFormData({ ...formData, startedAt: Math.floor(newTime / 1000) });
+                  }
+                }}
                 className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-medium text-[#131b2e] dark:text-white focus:border-[#00E5FF] outline-none"
               />
             </div>

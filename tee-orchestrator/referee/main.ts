@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 80;
 const MOVE_TIMEOUT = 60000;
 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x581a184d8Bd0B9FB68569eEB738Eb678150a143D") as `0x${string}`;
+const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x8a8802E765602BD93aB9aFa3deB3fACA46D9350f") as `0x${string}`;
 const TOURNAMENT_ADDRESS = process.env.TOURNAMENT_ADDRESS as `0x${string}`;
 
 const zeroGTestnet = defineChain({
@@ -39,11 +39,11 @@ let board: Chess | null = null;
 
 function broadcastMove(agentId: string, move: string) {
     if (!wss || !board) return;
-    const data = JSON.stringify({ 
+    const data = JSON.stringify({
         type: 'move',
-        agent: agentId, 
+        agent: agentId,
         move,
-        fen: board.fen() 
+        fen: board.fen()
     });
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
@@ -166,7 +166,7 @@ async function playGame() {
     console.log(`Game finished. Winner: ${winnerId}`);
     await client.emitEvent('deviant-referee', `Game finished. Winner: ${winnerId}`);
 
-    const result = { winnerId, reason: "normal", pgn: board.pgn() };
+    const result = { winnerId, reason: "normal", pgn: board.pgn(), isDraw };
     board = null; // Reset board after game
     return result;
 }
@@ -182,18 +182,18 @@ async function signAndAttest(result: any, tournament: string) {
         const quoteResult = await client.getQuote(resultHashBytes);
 
         // Prepare the message for the smart contract (matching Tournament.sol)
-        // We sign the tournament address + winner ID + hash(Audit Evidence) to prevent replay attacks
+        // We sign the tournament address + winner ID + hash(Audit Evidence) + draw status (no Winner)
         const messageHash = keccak256(encodePacked(
-            ['address', 'uint256', 'bytes32'],
-            [tournament as `0x${string}`, BigInt(result.winnerId), resultHash]
+            ['address', 'uint256', 'bytes32', 'bool'],
+            [tournament as `0x${string}`, BigInt(result.winnerId), resultHash, result.isDraw]
         ));
 
         const ethSignature = await id.ethAccount.signMessage({ message: { raw: messageHash } });
 
         return {
-            result,
             tournament,
-            winnerAgentId: result.winnerId,
+            result,
+            resultHash: resultHash,
             signer: {
                 address: id.ethAccount.address,
                 signature: ethSignature
@@ -202,7 +202,6 @@ async function signAndAttest(result: any, tournament: string) {
                 quote: quoteResult.quote,
                 hash: resultHash,
                 eventLog: quoteResult.event_log,
-                signatureChain: id.walletKey.signature_chain
             }
         }
     } catch (e: any) {
@@ -297,7 +296,7 @@ const server = app.listen(PORT, () => {
     wss = new WebSocketServer({ server });
     wss.on('connection', (ws) => {
         console.log('[Referee] New WebSocket client connected');
-        
+
         // Send initial state if game is active
         if (board) {
             ws.send(JSON.stringify({

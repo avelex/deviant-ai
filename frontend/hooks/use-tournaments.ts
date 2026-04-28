@@ -15,7 +15,6 @@ export interface ContractTournament {
   timeValue: string;
   reward: string;
   rewardValue: number;
-  closesAt: number;
   createdAt: number;
   address: string;
   owner: string;
@@ -24,7 +23,8 @@ export interface ContractTournament {
   slotPrice: bigint;
   agentKeys: string[];
   teeAddress: string;
-  startTime: number;
+  startedAt: number;
+  finishedAt: number;
 }
 
 export function useTournaments() {
@@ -48,7 +48,7 @@ export function useTournaments() {
           address,
           abi: TOURNAMENT_ABI,
           functionName: 'config'
-        }) as any;
+        });
 
         const state = await publicClient.readContract({
           address,
@@ -69,31 +69,44 @@ export function useTournaments() {
 
         const statusMap: Record<number, TournamentStatus> = {
           0: 'REGISTRATION',
-          1: 'LIVE',
+          1: 'ACTIVE',
           2: 'FINISHED'
         };
 
+        const owner = config[0];
+        const teeAddress = config[1];
+        const slotPrice = config[2];
+        const maxSlots = config[3];
+        const feeRate = config[4];
+        const createdAt = config[5];
+        const startedAt = config[6];
+        const finishedAt = config[7];
+        const id = config[8];
+        const name = config[9];
+        const category = config[10];
+        const liveUri = config[11];
+
         return {
-          id: config[6].toString(),
-          title: config[7],
+          id: id.toString(),
+          title: name,
           status: statusMap[state] || 'FINISHED',
           mainIcon: state === 1 ? 'zap' : state === 0 ? 'clock' : 'lock',
-          category: config[8],
+          category: category,
           mode: 'Solo',
-          slots: `${agentKeys.length}/${config[3].toString()}`,
+          slots: `${agentKeys.length}/${maxSlots.toString()}`,
           timeLabel: state === 0 ? 'STARTS AT' : 'ENDED',
-          timeValue: new Date(Number(config[5]) * 1000).toLocaleString(),
-          reward: `${Number(1)} 0G`,
-          rewardValue: Number(config[2]),
-          closesAt: 0,
-          createdAt: Number(config[6]) * 1000,
+          timeValue: new Date(Number(startedAt) * 1000).toLocaleString(),
+          reward: `${Number(0)} 0G`,
+          rewardValue: Number(slotPrice),
+          finishedAt: Number(finishedAt) * 1000,
+          createdAt: Number(createdAt) * 1000,
           address: address,
-          owner: config[0],
-          teeAddress: config[1],
-          liveUri: config[9],
+          owner: owner,
+          teeAddress: teeAddress,
+          liveUri: liveUri,
           rawState: state,
-          slotPrice: BigInt(config[2]),
-          startTime: Number(config[5]) * 1000,
+          slotPrice: slotPrice,
+          startedAt: Number(startedAt) * 1000,
           agentKeys: agentKeys.map(k => k.toString())
         } as ContractTournament;
       }));

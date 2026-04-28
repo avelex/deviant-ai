@@ -156,6 +156,7 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
           <TournamentResult
             tournamentAddress={data.address!}
             liveUri={(data as any).liveUri}
+            status={data.status}
           />
 
           {/* Prediction Market / Bets Card */}
@@ -325,7 +326,7 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                 const maxSlots = Number(data.maxSlots || "0");
                 const isFull = currentSlots > 0 && currentSlots === maxSlots;
                 const isRegistrationOpen = data.rawState === 0;
-                const isTime = data.startTime ? Date.now() >= data.startTime : true;
+                const isTime = data.startedAt ? Date.now() >= data.startedAt : true;
                 const canStart = isRegistrationOpen && isFull && isTime && isOwner;
 
                 return (

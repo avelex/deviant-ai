@@ -7,6 +7,7 @@ import { TOURNAMENT_ABI } from "@/lib/web3";
 interface TournamentResultProps {
   tournamentAddress: string;
   liveUri?: string;
+  status?: string;
 }
 
 interface ResultData {
@@ -14,9 +15,10 @@ interface ResultData {
     winnerId: string;
     reason: string;
     pgn: string;
+    isDraw: boolean;
   };
+  resultHash: string;
   tournament: string;
-  winnerAgentId: string;
   signer: {
     address: string;
     signature: string;
@@ -29,7 +31,7 @@ interface ResultData {
   } | null;
 }
 
-export function TournamentResult({ tournamentAddress, liveUri }: TournamentResultProps) {
+export function TournamentResult({ tournamentAddress, liveUri, status }: TournamentResultProps) {
   const [data, setData] = useState<ResultData | null>(null);
   const { writeContract, isPending } = useWriteContract();
 
@@ -72,14 +74,20 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
       abi: TOURNAMENT_ABI,
       functionName: "resolveTournament",
       args: [
-        BigInt(data.winnerAgentId || data.result.winnerId),
+        BigInt(data.result.winnerId),
         data.attestation.hash as `0x${string}`,
-        data.signer.signature as `0x${string}`
+        data.signer.signature as `0x${string}`,
+        data.result.isDraw
       ],
     });
   };
 
-  const isResolveDisabled = isPending || !data.signer || !data.attestation;
+  const isResolveDisabled = isPending || !data.signer || !data.attestation || status === 'FINISHED';
+  const buttonText = isPending 
+    ? "RESOLVING..." 
+    : status === 'FINISHED' 
+      ? "RESOLVED" 
+      : "RESOLVE GAME";
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8 mt-6 lg:mt-8">
@@ -101,6 +109,12 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
             <div className="text-[10px] font-bold tracking-widest text-[#00E5FF] uppercase mb-1">Reason</div>
             <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
               {data.result.reason}
+            </div>
+          </div>
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+            <div className="text-[10px] font-bold tracking-widest text-[#00E5FF] uppercase mb-1">Is Draw</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+              {data.result.isDraw ? "Yes" : "No"}
             </div>
           </div>
           <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30 md:col-span-2">
@@ -157,7 +171,7 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
           disabled={isResolveDisabled}
           className="w-full bg-[#00E5FF] text-black py-4 text-[11px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? "RESOLVING..." : "RESOLVE GAME"}
+          {buttonText}
         </button>
       </div>
     </div>

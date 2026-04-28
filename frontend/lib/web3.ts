@@ -31,16 +31,16 @@ export const publicClient = createPublicClient({
 
 export const TOURNAMENT_FACTORY_ABI = parseAbi([
   'function getTournaments() external view returns (address[])',
-  'function createTournament(string name, string category, uint256 slotPrice, uint256 maxSlots, uint16 feeRate, uint256 startTime) external returns (address)',
+  'function createTournament(string name, string category, uint256 slotPrice, uint256 maxSlots, uint16 feeRate, uint256 startedAt, uint256 finishedAt) external returns (address)',
   'function setTournamentTee(address _tournament, address _tee) external'
 ]);
 
 export const TOURNAMENT_ABI = parseAbi([
-  'function config() external view returns (address owner, address tee, uint256 slotPrice, uint256 maxSlots, uint16 feeRate, uint256 startTime, uint256 id, string name, string category, string liveUri)',
+  'function config() external view returns (address owner, address tee, uint256 slotPrice, uint256 maxSlots, uint16 feeRate, uint256 createdAt, uint256 startedAt, uint256 finishedAt, uint256 id, string name, string category, string liveUri)',
   'function state() external view returns (uint8)',
   'function getAgentKeys() external view returns (uint256[])',
   'function setLiveUri(string calldata _liveUri) external',
   'function joinTournament(uint256 agentId) external payable',
   'function startTournament() external',
-  'function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature) external'
+  'function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature, bool _noWinner) external'
 ]);

@@ -12,7 +12,7 @@ export interface TournamentData {
   slotPrice?: bigint;
   maxSlots?: string;
   teeAddress?: string;
-  startTime?: number;
+  startedAt?: number;
   parameters: {
     category: string;
     type: string;

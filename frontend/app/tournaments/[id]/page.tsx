@@ -23,9 +23,9 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
     rawState: activeTournament.rawState,
     slotPrice: activeTournament.slotPrice,
     maxSlots: activeTournament.slots.split('/')[1],
-    startTime: activeTournament.startTime,
+    startedAt: activeTournament.startedAt,
     teeAddress: activeTournament.teeAddress,
-    status: activeTournament.status === 'LIVE' ? 'ACTIVE' : activeTournament.status,
+    status: activeTournament.status,
     liveUri: activeTournament.liveUri,
     parameters: {
       category: activeTournament.category || "AI Chess",
@@ -67,8 +67,8 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
                   <span className="text-[#131b2e] dark:text-white">DETAIL</span>
                 </div>
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => refresh()}
                 disabled={loading}
                 className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-800 hover:border-[#00E5FF] text-[10px] font-bold tracking-widest uppercase text-slate-500 hover:text-[#00E5FF] transition-all disabled:opacity-50"

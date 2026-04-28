@@ -16,7 +16,8 @@ interface Tournament {
   timeValue: string;
   reward: string;
   rewardValue: number;
-  closesAt: number;
+  finishedAt: number;
+  startedAt: number;
   createdAt: number;
 }
 
@@ -26,7 +27,7 @@ interface TournamentListProps {
 }
 
 export function TournamentList({ initialMarkets, onCreateClick }: TournamentListProps) {
-  const [filter, setFilter] = useState<'ALL' | 'LIVE' | 'REGISTRATION' | 'FINISHED'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'REGISTRATION' | 'FINISHED'>('ALL');
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -88,7 +89,7 @@ export function TournamentList({ initialMarkets, onCreateClick }: TournamentList
 
             {isFilterOpen && (
               <div className="absolute top-full right-0 mt-1 w-full min-w-[160px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden backdrop-blur-md">
-                {(['ALL', 'LIVE', 'REGISTRATION', 'FINISHED'] as const).map(option => (
+                {(['ALL', 'ACTIVE', 'REGISTRATION', 'FINISHED'] as const).map(option => (
                   <button
                     key={option}
                     onClick={() => { setFilter(option); setIsFilterOpen(false); }}
