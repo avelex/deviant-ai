@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './theme-toggle';
 import { cn } from '@/lib/utils';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export function Header() {
   const pathname = usePathname();
@@ -46,9 +47,7 @@ export function Header() {
         <div className="hidden md:flex items-center gap-2">
           <ThemeToggle />
         </div>
-        <button className="border border-[#00E5FF] text-[#00E5FF] bg-transparent px-4 py-2 md:px-6 md:py-2 text-xs md:text-sm font-medium uppercase hover:bg-[#00E5FF]/5 transition-all duration-200 rounded-none whitespace-nowrap">
-          Connect Wallet
-        </button>
+        <ConnectButton showBalance={false} chainStatus="icon" accountStatus="address" />
       </div>
     </header>
   );
