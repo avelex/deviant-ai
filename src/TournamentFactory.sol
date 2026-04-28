@@ -61,16 +61,22 @@ contract TournamentFactory is Ownable {
         uint256 slotPrice,
         uint256 maxSlots,
         uint16 feeRate,
-        uint256 startTime
+        uint256 startedAt,
+        uint256 finishedAt
     ) external returns (address) {
+        require(startedAt >= block.timestamp, "Started at must be in the future");
+
         uint256 id = tournaments.length() + 1;
+
         ITournament.Config memory config = ITournament.Config({
             owner: msg.sender,
             tee: address(0),
             slotPrice: slotPrice,
             maxSlots: maxSlots,
             feeRate: feeRate,
-            startTime: startTime,
+            createdAt: block.timestamp,
+            startedAt: startedAt,
+            finishedAt: finishedAt,
             name: name,
             category: category,
             id: id,

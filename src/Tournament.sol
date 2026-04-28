@@ -19,6 +19,7 @@ contract Tournament is ITournament, Initializable {
     ITournament.State public state;
 
     uint256 public winnerAgentId;
+    bool public noWinner;
     uint256 public totalEntryFees;
     uint256 public totalBetsPool;
 
@@ -28,6 +29,7 @@ contract Tournament is ITournament, Initializable {
     mapping(address => bool) public hasClaimed;
 
     uint256 constant FEE_RATE_MAX_BPS = 10000;
+    int256 constant DRAWN_RESULT = -1;
 
     modifier onlyFactory() {
         require(msg.sender == address(factory), "Not factory");
@@ -61,7 +63,7 @@ contract Tournament is ITournament, Initializable {
     function startTournament() external {
         require(state == ITournament.State.Registration, "Not in Registration state");
         require(agents.length() == config.maxSlots, "Not enough participants");
-        require(block.timestamp >= config.startTime, "Not yet time to start tournament");
+        require(block.timestamp >= config.startedAt, "Not yet time to start tournament");
 
         state = ITournament.State.Active;
         emit ITournament.TournamentStarted();
@@ -71,7 +73,7 @@ contract Tournament is ITournament, Initializable {
 
     function placeBet(uint256 _agentId) external payable {
         require(state == ITournament.State.Active, "Not in Active state");
-        require(block.timestamp < config.startTime, "Betting window closed");
+        require(block.timestamp < config.startedAt, "Betting window closed");
         require(msg.value > 0, "Bet must be > 0");
         require(agents.contains(_agentId), "Agent not in tournament");
 
@@ -80,20 +82,24 @@ contract Tournament is ITournament, Initializable {
         totalBetsOnAgent[_agentId] += msg.value;
     }
 
-    function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature) external {
+    function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature, bool _noWinner)
+        external
+    {
         require(state == ITournament.State.Active, "Not in Active state");
-        require(agents.contains(_winnerAgentId), "Winner not in tournament");
+        require(agents.contains(_winnerAgentId) || _noWinner, "Winner not in tournament");
 
-        bytes32 messageHash = keccak256(abi.encodePacked(address(this), _winnerAgentId, _resultHash));
+        bytes32 messageHash = keccak256(abi.encodePacked(address(this), _winnerAgentId, _resultHash, _noWinner));
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
         address signer = ECDSA.recover(ethSignedMessageHash, _signature);
 
         require(signer == config.tee, "Invalid TEE signature");
 
         winnerAgentId = _winnerAgentId;
+        noWinner = _noWinner;
         state = ITournament.State.Finished;
+        config.finishedAt = block.timestamp;
 
-        emit ITournament.TournamentResolved(_winnerAgentId);
+        emit ITournament.TournamentResolved(_winnerAgentId, _noWinner);
     }
 
     function claimRewards() external {
@@ -117,16 +123,29 @@ contract Tournament is ITournament, Initializable {
             reward += netEntryFees;
         }
 
-        // Bettor Reward (Proportional share of net bets pool)
-        uint256 userBet = bets[msg.sender];
-        if (userBet > 0 && totalBetsOnAgent[winnerAgentId] > 0) {
-            uint256 betReward = (userBet * netBetsPool) / totalBetsOnAgent[winnerAgentId];
-            reward += betReward;
+        if (noWinner) {
+            // Refund Case
+            reward += bets[msg.sender];
+            // Refund if sender is an agent owner
+            uint256[] memory agentIds = agents.keys();
+            for (uint256 i = 0; i < agentIds.length; i++) {
+                if (agents.get(agentIds[i]) == msg.sender && config.slotPrice > 0) {
+                    reward += config.slotPrice;
+                }
+            }
+        } else {
+            // Bettor Reward (Proportional share of net bets pool)
+            uint256 userBet = bets[msg.sender];
+            if (userBet > 0 && totalBetsOnAgent[winnerAgentId] > 0) {
+                uint256 betReward = (userBet * netBetsPool) / totalBetsOnAgent[winnerAgentId];
+                reward += betReward;
+            }
         }
 
         require(reward > 0, "No rewards to claim");
 
         hasClaimed[msg.sender] = true;
+
         (bool success,) = payable(msg.sender).call{value: reward}("");
         require(success, "Transfer failed");
     }

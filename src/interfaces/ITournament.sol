@@ -8,7 +8,10 @@ interface ITournament {
         uint256 slotPrice;
         uint256 maxSlots;
         uint16 feeRate;
-        uint256 startTime;
+
+        uint256 createdAt;
+        uint256 startedAt;
+        uint256 finishedAt;
 
         uint256 id;
         string name;
@@ -23,13 +26,14 @@ interface ITournament {
     }
 
     event TournamentStarted();
-    event TournamentResolved(uint256 winnerAgentId);
+    event TournamentResolved(uint256 winnerAgentId, bool _noWinner);
 
     function joinTournament(uint256 agentId) external payable;
 
     function startTournament() external;
 
-    function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature) external;
+    function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature, bool _noWinner)
+        external;
 
     function claimRewards() external;
 
