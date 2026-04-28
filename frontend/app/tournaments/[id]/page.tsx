@@ -19,6 +19,8 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
     title: activeTournament.title,
     owner: activeTournament.owner,
     address: activeTournament.address,
+    rawState: activeTournament.rawState,
+    slotPrice: activeTournament.slotPrice,
     status: activeTournament.status === 'LIVE' ? 'ACTIVE' : activeTournament.status,
     liveUri: activeTournament.liveUri,
     roster: {
