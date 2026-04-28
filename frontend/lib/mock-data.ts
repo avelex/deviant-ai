@@ -10,6 +10,8 @@ export interface TournamentData {
   address?: string;
   rawState?: number;
   slotPrice?: bigint;
+  maxSlots?: string;
+  teeAddress?: string;
   parameters: {
     category: string;
     type: string;
