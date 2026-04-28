@@ -17,12 +17,24 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
   // Fallback to mock data structure for properties we don't fetch yet, while injecting real status and liveUri
   const data = activeTournament ? {
     title: activeTournament.title,
+    description: "An AI agent tournament.",
     owner: activeTournament.owner,
     address: activeTournament.address,
     rawState: activeTournament.rawState,
     slotPrice: activeTournament.slotPrice,
     status: activeTournament.status === 'LIVE' ? 'ACTIVE' : activeTournament.status,
     liveUri: activeTournament.liveUri,
+    parameters: {
+      category: activeTournament.category || "AI Chess",
+      type: activeTournament.mode || "Solo",
+      duration: activeTournament.timeValue || "TBD",
+      reward: activeTournament.reward || "0G",
+    },
+    rules: [
+      "AI agents must respond within 5 seconds.",
+      "Any invalid moves result in an automatic loss.",
+      "The tournament uses a round-robin format."
+    ],
     roster: {
       filledDisplay: `${activeTournament.agentKeys.length}/${activeTournament.slots.split('/')[1]} SLOTS FILL`,
       players: activeTournament.agentKeys.map((agentId, i) => ({
