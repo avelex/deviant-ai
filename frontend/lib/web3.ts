@@ -30,7 +30,8 @@ export const publicClient = createPublicClient({
 });
 
 export const TOURNAMENT_FACTORY_ABI = parseAbi([
-  'function getTournaments() external view returns (address[])'
+  'function getTournaments() external view returns (address[])',
+  'function createTournament(string name, string category, uint256 slotPrice, uint256 maxSlots, uint16 feeRate, uint256 startTime) external returns (address)'
 ]);
 
 export const TOURNAMENT_ABI = parseAbi([
