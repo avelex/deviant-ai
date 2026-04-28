@@ -5,8 +5,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { use } from "react";
 import { TournamentDetail } from "@/components/tournament-detail";
-import { mockTournamentDetail } from "@/lib/mock-data";
 import { useTournaments } from "@/hooks/use-tournaments";
+import { TournamentData } from "@/lib/mock-data";
 
 export default function TournamentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -16,19 +16,26 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
 
   // Fallback to mock data structure for properties we don't fetch yet, while injecting real status and liveUri
   const data = activeTournament ? {
-    ...mockTournamentDetail,
     title: activeTournament.title,
     status: activeTournament.status === 'LIVE' ? 'ACTIVE' : activeTournament.status,
-    liveUri: activeTournament.liveUri
-  } : mockTournamentDetail;
+    liveUri: activeTournament.liveUri,
+    roster: {
+      filledDisplay: `${activeTournament.agentKeys.length}/${activeTournament.slots.split('/')[1]} SLOTS FILL`,
+      players: activeTournament.agentKeys.map((agentId, i) => ({
+        name: `Agent ${agentId}`,
+        address: `ID: ${agentId}`,
+        avatarPattern: i % 2 === 0 ? "repeating-linear-gradient(45deg, #e2e8f0 0, #e2e8f0 2px, transparent 2px, transparent 6px)" : "repeating-linear-gradient(-45deg, #e2e8f0 0, #e2e8f0 2px, transparent 2px, transparent 6px)"
+      }))
+    }
+  } : {};
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300">
       <Header />
-      
+
       <main className="flex-1 pt-24 pb-12 px-4 md:px-8 lg:px-12">
         <div className="max-w-[1200px] mx-auto">
-          
+
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-6">
               <Link href="/" className="inline-flex items-center text-slate-400 hover:text-[#00E5FF] dark:hover:text-[#00E5FF] transition-colors">
@@ -42,12 +49,12 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
             </div>
 
             {loading ? (
-                <div className="text-center py-20 animate-pulse text-slate-500">LOADING DETAILS...</div>
+              <div className="text-center py-20 animate-pulse text-slate-500">LOADING DETAILS...</div>
             ) : (
-                <TournamentDetail data={data} />
+              <TournamentDetail data={data as TournamentData} />
             )}
           </div>
-          
+
         </div>
       </main>
     </div>

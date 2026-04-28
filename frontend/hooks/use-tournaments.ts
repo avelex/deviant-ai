@@ -19,6 +19,7 @@ export interface ContractTournament {
   address: string;
   liveUri: string;
   rawState: number;
+  agentKeys: string[];
 }
 
 export function useTournaments() {
@@ -29,9 +30,9 @@ export function useTournaments() {
     async function fetchTournaments() {
       try {
         if (FACTORY_ADDRESS === "0x0000000000000000000000000000000000000000") {
-            console.warn("Factory address not configured.");
-            setLoading(false);
-            return;
+          console.warn("Factory address not configured.");
+          setLoading(false);
+          return;
         }
         const addresses = await publicClient.readContract({
           address: FACTORY_ADDRESS,
@@ -45,12 +46,23 @@ export function useTournaments() {
             abi: TOURNAMENT_ABI,
             functionName: 'config'
           }) as any;
-          
+
           const state = await publicClient.readContract({
             address,
             abi: TOURNAMENT_ABI,
             functionName: 'state'
           }) as number;
+
+          let agentKeys: bigint[] = [];
+          try {
+            agentKeys = await publicClient.readContract({
+              address,
+              abi: TOURNAMENT_ABI,
+              functionName: 'getAgentKeys'
+            }) as bigint[];
+          } catch (e) {
+            console.error("Failed to fetch agent keys", e);
+          }
 
           // state: 0 = Registration, 1 = Active, 2 = Finished
           const statusMap: Record<number, TournamentStatus> = {
@@ -66,16 +78,17 @@ export function useTournaments() {
             mainIcon: state === 1 ? 'zap' : state === 0 ? 'clock' : 'lock',
             category: config[8],
             mode: 'Solo', // Can be derived or mocked
-            slots: `0/${config[3].toString()}`,
+            slots: `${agentKeys.length}/${config[3].toString()}`,
             timeLabel: state === 0 ? 'STARTS AT' : 'ENDED',
             timeValue: new Date(Number(config[5]) * 1000).toLocaleString(),
-            reward: `${(Number(config[2]) * Number(config[3]) / 1e18).toFixed(2)} 0G`, // Example math
+            reward: `${Number(1)} 0G`, // Example math
             rewardValue: Number(config[2]),
-            closesAt: Number(config[5]) * 1000,
-            createdAt: Date.now(),
+            closesAt: 0,
+            createdAt: Number(config[6]) * 1000,
             address: address,
             liveUri: config[9],
-            rawState: state
+            rawState: state,
+            agentKeys: agentKeys.map(k => k.toString())
           } as ContractTournament;
         }));
 
@@ -86,7 +99,7 @@ export function useTournaments() {
         setLoading(false);
       }
     }
-    
+
     fetchTournaments();
   }, []);
 

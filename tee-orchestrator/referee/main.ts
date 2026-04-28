@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 80;
 const MOVE_TIMEOUT = 60000;
 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x71be3e225A2F46F3350B7374737a5341148Fa6A9") as `0x${string}`;
+const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x581a184d8Bd0B9FB68569eEB738Eb678150a143D") as `0x${string}`;
 const TOURNAMENT_ADDRESS = process.env.TOURNAMENT_ADDRESS as `0x${string}`;
 
 const zeroGTestnet = defineChain({

@@ -4,36 +4,36 @@ import 'dotenv/config';
 import { createClient } from "@phala/cloud";
 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = "0x71be3e225A2F46F3350B7374737a5341148Fa6A9" as `0x${string}`;
+const FACTORY_ADDRESS = "0x581a184d8Bd0B9FB68569eEB738Eb678150a143D" as `0x${string}`;
 const AGENT_ID_ADDRESS = "0xd032112434295a340E5de9fe04d28b932E8B57DA" as `0x${string}`;
 
 const zeroGTestnet = defineChain({
-    id: 16602,
-    name: '0G Testnet',
-    network: '0g-testnet',
-    nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
-    rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
+  id: 16602,
+  name: '0G Testnet',
+  network: '0g-testnet',
+  nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
+  rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
 });
 
 export async function deployTournament(tournament: string, appId: string): Promise<string> {
-    console.log(`Deploying tournament ${appId} to Phala Cloud...`);
+  console.log(`Deploying tournament ${appId} to Phala Cloud...`);
 
-    if (!process.env.PHALA_CLOUD_API_KEY) {
-        throw new Error('PHALA_CLOUD_API_KEY environment variable is required');
-    }
+  if (!process.env.PHALA_CLOUD_API_KEY) {
+    throw new Error('PHALA_CLOUD_API_KEY environment variable is required');
+  }
 
-    const client = createClient({ apiKey: process.env.PHALA_CLOUD_API_KEY });
-    const provision = await client.provisionCvm({
-        name: appId,
-        vcpu: 1,
-        memory: 2048,
-        diskSize: 20,
-        instance_type: "tdx.small",
-        compose_file: {
-            public_logs: true,
-            public_sysinfo: true,
-            gateway_enabled: true,
-            docker_compose_file: `
+  const client = createClient({ apiKey: process.env.PHALA_CLOUD_API_KEY });
+  const provision = await client.provisionCvm({
+    name: appId,
+    vcpu: 1,
+    memory: 2048,
+    diskSize: 20,
+    instance_type: "tdx.small",
+    compose_file: {
+      public_logs: true,
+      public_sysinfo: true,
+      gateway_enabled: true,
+      docker_compose_file: `
 services:
   referee:
     image: alexgubin/deviant-referee:v0.1.0
@@ -81,57 +81,57 @@ volumes:
   agent1_data:
   agent2_data:
 `
-        }
-    });
+    }
+  });
 
-    const cvm = await client.commitCvmProvision({
-        app_id: provision.app_id!,
-        compose_hash: provision.compose_hash!,
-    });
+  const cvm = await client.commitCvmProvision({
+    app_id: provision.app_id!,
+    compose_hash: provision.compose_hash!,
+  });
 
-    console.log("CVM deployed:", cvm);
+  console.log("CVM deployed:", cvm);
 
-    return cvm.id.toString();
+  return cvm.id.toString();
 }
 
 async function handleTournamentStarted(publicClient: PublicClient, tournamentAddress: `0x${string}`, category: string, id: bigint) {
-    console.log(`\n[Watcher] TournamentStarted event detected at ${tournamentAddress} for category ${category} with id ${id}`);
+  console.log(`\n[Watcher] TournamentStarted event detected at ${tournamentAddress} for category ${category} with id ${id}`);
 
-    try {
-        const appId = `${category}-${id.toString()}`;
-        const taskId = await deployTournament(tournamentAddress, appId);
-        console.log(`[Watcher] Deployment successful. Task ID: ${taskId}`);
-    } catch (error) {
-        console.error(`[Watcher] Failed to process tournament ${tournamentAddress}:`, error);
-    }
+  try {
+    const appId = `${category}-${id.toString()}`;
+    const taskId = await deployTournament(tournamentAddress, appId);
+    console.log(`[Watcher] Deployment successful. Task ID: ${taskId}`);
+  } catch (error) {
+    console.error(`[Watcher] Failed to process tournament ${tournamentAddress}:`, error);
+  }
 }
 
 async function main() {
-    const publicClient = createPublicClient({
-        chain: zeroGTestnet,
-        transport: http()
-    });
+  const publicClient = createPublicClient({
+    chain: zeroGTestnet,
+    transport: http()
+  });
 
-    console.log("[Watcher] Started, listening for TournamentCreated events...");
-    console.log(`[Watcher] Factory Address: ${FACTORY_ADDRESS}`);
+  console.log("[Watcher] Started, listening for TournamentCreated events...");
+  console.log(`[Watcher] Factory Address: ${FACTORY_ADDRESS}`);
 
-    publicClient.watchEvent({
-        address: FACTORY_ADDRESS,
-        event: parseAbiItem('event TournamentCreated(address indexed tournamentAddress, string category, uint256 id)'),
-        onLogs: async (logs) => {
-            for (const log of logs) {
-                if (log.args.tournamentAddress && log.args.category === "chess" && log.args.id) {
-                    await handleTournamentStarted(publicClient, log.args.tournamentAddress, log.args.category, log.args.id);
-                }
-            }
+  publicClient.watchEvent({
+    address: FACTORY_ADDRESS,
+    event: parseAbiItem('event TournamentCreated(address indexed tournamentAddress, string category, uint256 id)'),
+    onLogs: async (logs) => {
+      for (const log of logs) {
+        if (log.args.tournamentAddress && log.args.category === "chess" && log.args.id) {
+          await handleTournamentStarted(publicClient, log.args.tournamentAddress, log.args.category, log.args.id);
         }
-    });
+      }
+    }
+  });
 
-    // Keep process alive
-    process.stdin.resume();
+  // Keep process alive
+  process.stdin.resume();
 }
 
 // Only run main if executed directly
 if (require.main === module) {
-    main().catch(console.error);
+  main().catch(console.error);
 }

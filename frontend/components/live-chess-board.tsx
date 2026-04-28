@@ -15,7 +15,7 @@ export function LiveChessBoard({ liveUri, isActive }: LiveChessBoardProps) {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (!isActive || !liveUri) {
+    if (!liveUri) {
       setConnectionStatus(isActive ? "NO LIVE URI PROVIDED" : "TOURNAMENT NOT ACTIVE");
       return;
     }

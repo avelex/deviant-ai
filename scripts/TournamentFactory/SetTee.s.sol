@@ -4,11 +4,11 @@ pragma solidity ^0.8.20;
 import {Script, console} from "forge-std/Script.sol";
 import {TournamentFactory} from "../../src/TournamentFactory.sol";
 
-contract SetTapp is Script {
-    function run(address factory, address tournament, address tapp) public {
+contract SetTee is Script {
+    function run(address factory, address tournament, address tee) public {
         vm.startBroadcast();
         TournamentFactory factoryContract = TournamentFactory(factory);
-        factoryContract.setTournamentTappAddress(tournament, tapp);
+        factoryContract.setTournamentTee(tournament, tee);
         vm.stopBroadcast();
     }
 }
