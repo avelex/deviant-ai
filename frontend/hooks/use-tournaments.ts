@@ -18,6 +18,7 @@ export interface ContractTournament {
   closesAt: number;
   createdAt: number;
   address: string;
+  owner: string;
   liveUri: string;
   rawState: number;
   agentKeys: string[];
@@ -84,6 +85,7 @@ export function useTournaments() {
             closesAt: 0,
             createdAt: Number(config[6]) * 1000,
             address: address,
+            owner: config[0],
             liveUri: config[9],
             rawState: state,
             agentKeys: agentKeys.map(k => k.toString())

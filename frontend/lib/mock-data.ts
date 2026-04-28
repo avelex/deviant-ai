@@ -6,6 +6,8 @@ export interface TournamentData {
   description: string;
   status: string;
   liveUri?: string;
+  owner?: string;
+  address?: string;
   parameters: {
     category: string;
     type: string;
