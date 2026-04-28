@@ -4,6 +4,7 @@ import { Check, FileText, X, Settings } from "lucide-react";
 import { useState } from "react";
 import { TournamentData } from "@/lib/mock-data";
 import { LiveChessBoard } from "@/components/live-chess-board";
+import { TournamentResult } from "@/components/tournament-result";
 import { useAccount, useWriteContract } from "wagmi";
 import { AdminPanel } from "./admin-panel";
 import { TOURNAMENT_ABI } from "@/lib/web3";
@@ -150,6 +151,12 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                </div>
             )}
           </div>
+
+          {/* Live Broadcast Result Panel */}
+          <TournamentResult 
+            tournamentAddress={data.address!}
+            liveUri={(data as any).liveUri}
+          />
 
           {/* Prediction Market / Bets Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8">
