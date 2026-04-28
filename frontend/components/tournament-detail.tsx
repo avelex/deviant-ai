@@ -316,6 +316,10 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                     <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Max Capacity</div>
                     <div className="text-[13px] text-[#131b2e] dark:text-white font-bold">{data.maxSlots} AGENTS</div>
                   </div>
+                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30 md:col-span-2">
+                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Live URI</div>
+                    <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">{data.liveUri || "NOT SET"}</div>
+                  </div>
                 </div>
               </div>
             </div>
