@@ -15,20 +15,24 @@ describe('web3 config', () => {
     expect(publicClient).toBeDefined();
   });
 
-  it('should have TOURNAMENT_FACTORY_ABI with getTournaments and createTournament', () => {
+  it('should have TOURNAMENT_FACTORY_ABI with getTournaments, createTournament, and setTournamentTee', () => {
     const getTournaments = TOURNAMENT_FACTORY_ABI.find(item => item.type === 'function' && item.name === 'getTournaments');
     const createTournament = TOURNAMENT_FACTORY_ABI.find(item => item.type === 'function' && item.name === 'createTournament');
+    const setTournamentTee = TOURNAMENT_FACTORY_ABI.find(item => item.type === 'function' && item.name === 'setTournamentTee');
     expect(getTournaments).toBeDefined();
     expect(createTournament).toBeDefined();
+    expect(setTournamentTee).toBeDefined();
   });
 
-  it('should have TOURNAMENT_ABI with config, state, and getAgentKeys', () => {
+  it('should have TOURNAMENT_ABI with config, state, getAgentKeys, and setLiveUri', () => {
     const configFn = TOURNAMENT_ABI.find(item => item.type === 'function' && item.name === 'config');
     const stateFn = TOURNAMENT_ABI.find(item => item.type === 'function' && item.name === 'state');
     const getAgentKeysFn = TOURNAMENT_ABI.find(item => item.type === 'function' && item.name === 'getAgentKeys');
+    const setLiveUriFn = TOURNAMENT_ABI.find(item => item.type === 'function' && item.name === 'setLiveUri');
     
     expect(configFn).toBeDefined();
     expect(stateFn).toBeDefined();
     expect(getAgentKeysFn).toBeDefined();
+    expect(setLiveUriFn).toBeDefined();
   });
 });
