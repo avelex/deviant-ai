@@ -4,6 +4,8 @@ import { Check, FileText, X, Settings } from "lucide-react";
 import { useState } from "react";
 import { TournamentData } from "@/lib/mock-data";
 import { LiveChessBoard } from "@/components/live-chess-board";
+import { useAccount } from "wagmi";
+import { AdminPanel } from "./admin-panel";
 
 interface TournamentDetailProps {
   data: TournamentData;
@@ -12,6 +14,8 @@ interface TournamentDetailProps {
 export function TournamentDetail({ data }: TournamentDetailProps) {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const { address: connectedAddress } = useAccount();
+  const isOwner = connectedAddress && data.owner && connectedAddress.toLowerCase() === data.owner.toLowerCase();
 
   return (
     <>
@@ -170,6 +174,12 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
               })()}
             </div>
           </div>
+
+          {isOwner && data.address && (
+            <div className="mt-6 lg:mt-8">
+              <AdminPanel tournamentAddress={data.address} />
+            </div>
+          )}
 
         </div>
       </div>
