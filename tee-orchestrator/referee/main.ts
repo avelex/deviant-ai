@@ -155,6 +155,9 @@ async function playGame() {
             const winnerId = currentTurn === 'w' ? agent2Id : agent1Id;
             return { winnerId, reason: "invalid_format", pgn: board.pgn() };
         }
+
+        // Add 250ms sleep between movements
+        await new Promise(resolve => setTimeout(resolve, 250));
     }
 
     const isDraw = board.isDraw();
