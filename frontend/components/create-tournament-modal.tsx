@@ -11,20 +11,20 @@ interface CreateTournamentModalProps {
   onClose: () => void;
 }
 
-const CATEGORIES = ["Chess", "Trading", "Gaming", "General"];
+const CATEGORIES = ["chess", "trading", "gaming"];
 
 export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    category: "Chess",
-    maxSlots: "10",
-    slotPrice: "0.1",
-    feeRate: "2.5",
-    startTime: new Date(Date.now() + 3600000).toISOString().slice(0, 16), // Default to 1 hour from now
+    category: "chess",
+    maxSlots: "2",
+    slotPrice: "0",
+    feeRate: "0",
+    startTime: new Date(Date.now()).toISOString().slice(0, 16), // Default to 1 hour from now
   });
 
   const { writeContract, data: hash, isPending, error } = useWriteContract();
-  
+
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
@@ -57,14 +57,14 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
     }
   };
 
-  const isFormValid = formData.name.trim().length > 0 && 
-                      parseFloat(formData.maxSlots) > 0 && 
-                      parseFloat(formData.slotPrice) >= 0;
+  const isFormValid = formData.name.trim().length > 0 &&
+    parseFloat(formData.maxSlots) > 0 &&
+    parseFloat(formData.slotPrice) >= 0;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
       <div className="absolute inset-0 bg-[#131b2e]/80 dark:bg-slate-950/80 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-[#00E5FF]/20 shadow-[0_0_40px_rgba(0,229,255,0.1)] flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
@@ -87,19 +87,19 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">Tournament Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. ALPHA CHAMPIONSHIP"
                   className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-medium text-[#131b2e] dark:text-white focus:border-[#00E5FF] outline-none"
                 />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">Category</label>
-                <select 
+                <select
                   value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-medium text-[#131b2e] dark:text-white focus:border-[#00E5FF] outline-none appearance-none"
                 >
                   {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -116,10 +116,10 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
                 <label className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
                   <Users size={10} /> Max Slots
                 </label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={formData.maxSlots}
-                  onChange={(e) => setFormData({...formData, maxSlots: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, maxSlots: e.target.value })}
                   className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-medium text-[#131b2e] dark:text-white focus:border-[#00E5FF] outline-none"
                 />
               </div>
@@ -127,11 +127,11 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
                 <label className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
                   <DollarSign size={10} /> Slot Price (0G)
                 </label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   step="0.01"
                   value={formData.slotPrice}
-                  onChange={(e) => setFormData({...formData, slotPrice: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, slotPrice: e.target.value })}
                   className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-medium text-[#131b2e] dark:text-white focus:border-[#00E5FF] outline-none"
                 />
               </div>
@@ -139,11 +139,11 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
                 <label className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
                   <Percent size={10} /> Fee Rate (%)
                 </label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   step="0.1"
                   value={formData.feeRate}
-                  onChange={(e) => setFormData({...formData, feeRate: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, feeRate: e.target.value })}
                   className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-medium text-[#131b2e] dark:text-white focus:border-[#00E5FF] outline-none"
                 />
               </div>
@@ -157,10 +157,10 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
               <label className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
                 <Calendar size={10} /> Start Time (Local)
               </label>
-              <input 
-                type="datetime-local" 
+              <input
+                type="datetime-local"
                 value={formData.startTime}
-                onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                 className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-medium text-[#131b2e] dark:text-white focus:border-[#00E5FF] outline-none"
               />
             </div>
