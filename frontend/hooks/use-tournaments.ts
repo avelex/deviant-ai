@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { publicClient, FACTORY_ADDRESS, TOURNAMENT_FACTORY_ABI, TOURNAMENT_ABI } from '@/lib/web3';
+import { useReadContract, usePublicClient } from 'wagmi';
+import { FACTORY_ADDRESS, TOURNAMENT_FACTORY_ABI, TOURNAMENT_ABI } from '@/lib/web3';
 import { TournamentStatus } from '@/components/tournament-card';
 
 export interface ContractTournament {
@@ -25,22 +26,20 @@ export interface ContractTournament {
 export function useTournaments() {
   const [tournaments, setTournaments] = useState<ContractTournament[]>([]);
   const [loading, setLoading] = useState(true);
+  const publicClient = usePublicClient();
+
+  const { data: addresses, isLoading: isAddressesLoading } = useReadContract({
+    address: FACTORY_ADDRESS,
+    abi: TOURNAMENT_FACTORY_ABI,
+    functionName: 'getTournaments',
+  });
 
   useEffect(() => {
-    async function fetchTournaments() {
-      try {
-        if (FACTORY_ADDRESS === "0x0000000000000000000000000000000000000000") {
-          console.warn("Factory address not configured.");
-          setLoading(false);
-          return;
-        }
-        const addresses = await publicClient.readContract({
-          address: FACTORY_ADDRESS,
-          abi: TOURNAMENT_FACTORY_ABI,
-          functionName: 'getTournaments'
-        }) as `0x${string}`[];
+    async function fetchTournamentDetails() {
+      if (!addresses || !publicClient) return;
 
-        const results = await Promise.all(addresses.map(async (address) => {
+      try {
+        const results = await Promise.all((addresses as `0x${string}`[]).map(async (address) => {
           const config = await publicClient.readContract({
             address,
             abi: TOURNAMENT_ABI,
@@ -64,7 +63,6 @@ export function useTournaments() {
             console.error("Failed to fetch agent keys", e);
           }
 
-          // state: 0 = Registration, 1 = Active, 2 = Finished
           const statusMap: Record<number, TournamentStatus> = {
             0: 'REGISTRATION',
             1: 'LIVE',
@@ -77,11 +75,11 @@ export function useTournaments() {
             status: statusMap[state] || 'FINISHED',
             mainIcon: state === 1 ? 'zap' : state === 0 ? 'clock' : 'lock',
             category: config[8],
-            mode: 'Solo', // Can be derived or mocked
+            mode: 'Solo',
             slots: `${agentKeys.length}/${config[3].toString()}`,
             timeLabel: state === 0 ? 'STARTS AT' : 'ENDED',
             timeValue: new Date(Number(config[5]) * 1000).toLocaleString(),
-            reward: `${Number(1)} 0G`, // Example math
+            reward: `${Number(1)} 0G`,
             rewardValue: Number(config[2]),
             closesAt: 0,
             createdAt: Number(config[6]) * 1000,
@@ -100,8 +98,12 @@ export function useTournaments() {
       }
     }
 
-    fetchTournaments();
-  }, []);
+    if (addresses) {
+      fetchTournamentDetails();
+    } else if (!isAddressesLoading) {
+        setLoading(false);
+    }
+  }, [addresses, publicClient, isAddressesLoading]);
 
-  return { tournaments, loading };
+  return { tournaments, loading: loading || isAddressesLoading };
 }
