@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Trophy, Activity, Calendar, DollarSign, Users, Percent } from "lucide-react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
@@ -29,6 +29,12 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
     hash,
   });
 
+  useEffect(() => {
+    if (isSuccess) {
+      onClose();
+    }
+  }, [isSuccess, onClose]);
+
   if (!isOpen) return null;
 
   const handleCreate = async () => {
@@ -50,11 +56,6 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
       console.error("Submission failed:", err);
     }
   };
-
-  if (isSuccess) {
-    // Optionally show success state or just close
-    onClose();
-  }
 
   const isFormValid = formData.name.trim().length > 0 && 
                       parseFloat(formData.maxSlots) > 0 && 
