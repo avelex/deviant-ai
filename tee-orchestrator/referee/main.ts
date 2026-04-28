@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Chess } from 'chess.js';
 import { DstackClient } from '@phala/dstack-sdk';
 import express from 'express';
+import cors from 'cors';
 import { createPublicClient, http, parseAbiItem, parseAbi, defineChain, PublicClient } from 'viem';
 import { WebSocketServer, WebSocket } from 'ws';
 
@@ -268,6 +269,7 @@ function listenForTournamentStart() {
 }
 
 const app = express();
+app.use(cors());
 
 app.get('/id', async (req, res) => {
     const id = await getEthereumIdentity();
