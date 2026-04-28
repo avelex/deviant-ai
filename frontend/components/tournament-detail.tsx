@@ -4,11 +4,67 @@ import { Check, FileText, X, Settings } from "lucide-react";
 import { useState } from "react";
 import { TournamentData } from "@/lib/mock-data";
 import { LiveChessBoard } from "@/components/live-chess-board";
-import { useAccount } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { AdminPanel } from "./admin-panel";
+import { TOURNAMENT_ABI } from "@/lib/web3";
 
 interface TournamentDetailProps {
   data: TournamentData;
+}
+
+function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: string, slotPrice: bigint }) {
+  const [isJoining, setIsJoining] = useState(false);
+  const [agentId, setAgentId] = useState("");
+  const { writeContract, isPending } = useWriteContract();
+
+  const handleJoin = () => {
+    if (!agentId) return;
+    writeContract({
+      address: tournamentAddress as `0x${string}`,
+      abi: TOURNAMENT_ABI,
+      functionName: "joinTournament",
+      args: [BigInt(agentId)],
+      value: slotPrice,
+    });
+  };
+
+  if (!isJoining) {
+    return (
+      <button 
+        onClick={() => setIsJoining(true)}
+        className="w-full border border-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF] hover:text-black text-[#00E5FF] p-4 flex items-center justify-center mt-2 transition-all font-bold tracking-widest uppercase text-[11px] shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]"
+      >
+        JOIN TOURNAMENT
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 mt-2 p-4 border border-[#00E5FF]/30 bg-slate-900/50">
+      <input
+        type="number"
+        placeholder="ENTER AGENT NFT ID"
+        value={agentId}
+        onChange={(e) => setAgentId(e.target.value)}
+        className="bg-transparent border-b border-[#00E5FF]/50 text-[#00E5FF] text-xs py-2 px-1 outline-none placeholder:text-[#00E5FF]/30 font-bold tracking-widest"
+      />
+      <div className="flex gap-2">
+        <button 
+          onClick={handleJoin}
+          disabled={isPending}
+          className="flex-1 bg-[#00E5FF] text-black p-2 text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
+        >
+          {isPending ? "JOINING..." : "CONFIRM JOIN"}
+        </button>
+        <button 
+          onClick={() => setIsJoining(false)}
+          className="px-3 border border-slate-700 text-slate-500 hover:text-white text-[10px] font-bold tracking-widest uppercase"
+        >
+          CANCEL
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function TournamentDetail({ data }: TournamentDetailProps) {
@@ -154,14 +210,10 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
               {(() => {
                 const [currentSlots, maxSlots] = data.roster.filledDisplay.split(' ')[0].split('/').map(Number);
                 const isNotFull = currentSlots < maxSlots;
-                const isRegistrationOpen = data.status === "REGISTRATION OPEN";
+                const isRegistrationOpen = data.rawState === 0;
 
-                if (isRegistrationOpen && isNotFull) {
-                  return (
-                    <button className="w-full border border-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF] hover:text-black text-[#00E5FF] p-4 flex items-center justify-center mt-2 transition-all font-bold tracking-widest uppercase text-[11px] shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]">
-                      JOIN TOURNAMENT
-                    </button>
-                  );
+                if (isRegistrationOpen && isNotFull && data.address && data.slotPrice !== undefined) {
+                  return <JoinSection tournamentAddress={data.address} slotPrice={data.slotPrice} />;
                 }
 
                 return (
