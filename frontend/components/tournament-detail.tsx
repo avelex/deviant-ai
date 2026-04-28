@@ -7,6 +7,7 @@ import { LiveChessBoard } from "@/components/live-chess-board";
 import { useAccount, useWriteContract } from "wagmi";
 import { AdminPanel } from "./admin-panel";
 import { TOURNAMENT_ABI } from "@/lib/web3";
+import { formatEther } from "viem";
 
 interface TournamentDetailProps {
   data: TournamentData;
@@ -266,6 +267,34 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                 <div className="border-y border-r border-slate-100 dark:border-slate-800/50 border-l-[3px] border-l-[#00E5FF] p-4 bg-white dark:bg-slate-900 shadow-sm shadow-slate-100/50 dark:shadow-none">
                   <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Reward</div>
                   <div className="text-lg text-[#131b2e] dark:text-white font-bold">{data.parameters.reward}</div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <h3 className="text-[11px] font-bold tracking-widest uppercase text-slate-500 mb-4">
+                  Technical Parameters
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Owner Address</div>
+                    <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">{data.owner}</div>
+                  </div>
+                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">TEE Address</div>
+                    <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+                      {data.teeAddress && data.teeAddress !== "0x0000000000000000000000000000000000000000" ? data.teeAddress : "NOT SET"}
+                    </div>
+                  </div>
+                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Slot Price</div>
+                    <div className="text-[13px] text-[#131b2e] dark:text-white font-bold">
+                      {data.slotPrice ? `${formatEther(data.slotPrice)} 0G` : "FREE"}
+                    </div>
+                  </div>
+                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Max Capacity</div>
+                    <div className="text-[13px] text-[#131b2e] dark:text-white font-bold">{data.maxSlots} AGENTS</div>
+                  </div>
                 </div>
               </div>
             </div>
