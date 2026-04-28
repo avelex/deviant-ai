@@ -8,6 +8,8 @@ export interface TournamentData {
   liveUri?: string;
   owner?: string;
   address?: string;
+  rawState?: number;
+  slotPrice?: bigint;
   parameters: {
     category: string;
     type: string;

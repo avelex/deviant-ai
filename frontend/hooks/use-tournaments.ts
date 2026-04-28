@@ -21,6 +21,7 @@ export interface ContractTournament {
   owner: string;
   liveUri: string;
   rawState: number;
+  slotPrice: bigint;
   agentKeys: string[];
 }
 
@@ -88,6 +89,7 @@ export function useTournaments() {
             owner: config[0],
             liveUri: config[9],
             rawState: state,
+            slotPrice: BigInt(config[2]),
             agentKeys: agentKeys.map(k => k.toString())
           } as ContractTournament;
         }));
