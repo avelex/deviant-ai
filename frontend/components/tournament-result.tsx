@@ -88,30 +88,65 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
       </h3>
 
       {/* Game Section */}
-      <div className="mb-6">
-        <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white mb-2">Game</h4>
-        <div className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 font-mono text-xs text-slate-600 dark:text-slate-400 break-all space-y-3">
-          <div><span className="text-[#00E5FF] font-bold">Winner Agent ID:</span> {data.result.winnerId === "0" ? "Draw (0)" : data.result.winnerId}</div>
-          <div><span className="text-[#00E5FF] font-bold">Reason:</span> {data.result.reason}</div>
-          <div className="whitespace-pre-wrap"><span className="text-[#00E5FF] font-bold">PGN:</span>{"\n"}{data.result.pgn}</div>
+      <div className="mb-8">
+        <h4 className="text-[11px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white mb-4">Game</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+            <div className="text-[10px] font-bold tracking-widest text-[#00E5FF] uppercase mb-1">Winner Agent ID</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+              {data.result.winnerId === "0" ? "Draw (0)" : data.result.winnerId}
+            </div>
+          </div>
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+            <div className="text-[10px] font-bold tracking-widest text-[#00E5FF] uppercase mb-1">Reason</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+              {data.result.reason}
+            </div>
+          </div>
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30 md:col-span-2">
+            <div className="text-[10px] font-bold tracking-widest text-[#00E5FF] uppercase mb-1">PGN</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all whitespace-pre-wrap max-h-40 overflow-y-auto">
+              {data.result.pgn}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* TEE Section */}
-      <div className="mb-6">
-        <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white mb-2">TEE</h4>
-        <div className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 font-mono text-xs text-slate-600 dark:text-slate-400 break-all space-y-3">
-          <div><span className="text-amber-500 font-bold">Signer Address:</span> {data.signer?.address || "N/A"}</div>
-          <div><span className="text-amber-500 font-bold">Signature:</span> {data.signer?.signature || "N/A"}</div>
+      <div className="mb-8">
+        <h4 className="text-[11px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white mb-4">TEE</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30 md:col-span-2">
+            <div className="text-[10px] font-bold tracking-widest text-amber-500 uppercase mb-1">Signer Address</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+              {data.signer?.address || "N/A"}
+            </div>
+          </div>
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30 md:col-span-2">
+            <div className="text-[10px] font-bold tracking-widest text-amber-500 uppercase mb-1">Signature</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+              {data.signer?.signature || "N/A"}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* TEE Attestation Section */}
       <div className="mb-6">
-        <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white mb-2">TEE Attestation</h4>
-        <div className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 font-mono text-xs text-slate-600 dark:text-slate-400 break-all space-y-3 max-h-48 overflow-y-auto">
-          <div><span className="text-purple-500 font-bold">Hash:</span> {data.attestation?.hash || "N/A"}</div>
-          <div><span className="text-purple-500 font-bold">Quote:</span> {data.attestation?.quote || "N/A"}</div>
+        <h4 className="text-[11px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white mb-4">TEE Attestation</h4>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+            <div className="text-[10px] font-bold tracking-widest text-purple-500 uppercase mb-1">Hash</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+              {data.attestation?.hash || "N/A"}
+            </div>
+          </div>
+          <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
+            <div className="text-[10px] font-bold tracking-widest text-purple-500 uppercase mb-1">Quote</div>
+            <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all max-h-48 overflow-y-auto">
+              {data.attestation?.quote || "N/A"}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -127,4 +162,5 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
       </div>
     </div>
   );
+
 }
