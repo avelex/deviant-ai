@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('web3 config', () => {
   it('should have zeroGGalileo chain defined correctly', () => {
-    expect(zeroGGalileo.id).toBe(16600);
+    expect(zeroGGalileo.id).toBe(16602);
     expect(zeroGGalileo.name).toBe('0G Galileo Testnet');
   });
 
@@ -15,9 +15,11 @@ describe('web3 config', () => {
     expect(publicClient).toBeDefined();
   });
 
-  it('should have TOURNAMENT_FACTORY_ABI with getTournaments', () => {
+  it('should have TOURNAMENT_FACTORY_ABI with getTournaments and createTournament', () => {
     const getTournaments = TOURNAMENT_FACTORY_ABI.find(item => item.type === 'function' && item.name === 'getTournaments');
+    const createTournament = TOURNAMENT_FACTORY_ABI.find(item => item.type === 'function' && item.name === 'createTournament');
     expect(getTournaments).toBeDefined();
+    expect(createTournament).toBeDefined();
   });
 
   it('should have TOURNAMENT_ABI with config, state, and getAgentKeys', () => {
