@@ -1,11 +1,11 @@
 import { createPublicClient, http, parseAbi, defineChain } from 'viem';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 
-export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://evmrpc-testnet.0g.ai";
+export const RPC_URL = "https://evmrpc-testnet.0g.ai";
 export const FACTORY_ADDRESS = (process.env.NEXT_PUBLIC_FACTORY_ADDRESS || "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
 export const zeroGGalileo = defineChain({
-  id: 16600,
+  id: 16602,
   name: '0G Galileo Testnet',
   nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
   rpcUrls: {

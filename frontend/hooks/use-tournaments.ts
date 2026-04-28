@@ -100,10 +100,10 @@ export function useTournaments() {
 
     if (addresses) {
       fetchTournamentDetails();
-    } else if (!isAddressesLoading) {
-        setLoading(false);
+    } else if (!isAddressesLoading && loading) {
+      setLoading(false);
     }
-  }, [addresses, publicClient, isAddressesLoading]);
+  }, [addresses, publicClient, isAddressesLoading, loading]);
 
   return { tournaments, loading: loading || isAddressesLoading };
 }
