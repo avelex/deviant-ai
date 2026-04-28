@@ -48,7 +48,7 @@ export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModal
           formData.category,
           parseEther(formData.slotPrice),
           BigInt(formData.maxSlots),
-          BigInt(Math.floor(parseFloat(formData.feeRate) * 100)), // Convert to basis points
+          Number(BigInt(Math.floor(parseFloat(formData.feeRate) * 100))), // Convert to basis points
           BigInt(Math.floor(new Date(formData.startTime).getTime() / 1000)),
         ],
       });
