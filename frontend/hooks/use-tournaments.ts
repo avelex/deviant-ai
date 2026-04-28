@@ -24,6 +24,7 @@ export interface ContractTournament {
   slotPrice: bigint;
   agentKeys: string[];
   teeAddress: string;
+  startTime: number;
 }
 
 export function useTournaments() {
@@ -92,6 +93,7 @@ export function useTournaments() {
             liveUri: config[9],
             rawState: state,
             slotPrice: BigInt(config[2]),
+            startTime: Number(config[5]) * 1000,
             agentKeys: agentKeys.map(k => k.toString())
           } as ContractTournament;
         }));

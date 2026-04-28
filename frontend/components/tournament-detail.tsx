@@ -68,6 +68,28 @@ function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: stri
   );
 }
 
+function StartTournamentButton({ tournamentAddress }: { tournamentAddress: string }) {
+  const { writeContract, isPending } = useWriteContract();
+
+  const handleStart = () => {
+    writeContract({
+      address: tournamentAddress as `0x${string}`,
+      abi: TOURNAMENT_ABI,
+      functionName: "startTournament",
+    });
+  };
+
+  return (
+    <button 
+      onClick={handleStart}
+      disabled={isPending}
+      className="px-6 py-3 bg-[#00E5FF] text-black hover:bg-white text-[11px] font-bold tracking-widest uppercase transition-all disabled:opacity-50"
+    >
+      {isPending ? "STARTING..." : "START TOURNAMENT"}
+    </button>
+  );
+}
+
 export function TournamentDetail({ data }: TournamentDetailProps) {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -294,10 +316,26 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                   <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
                     <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Max Capacity</div>
                     <div className="text-[13px] text-[#131b2e] dark:text-white font-bold">{data.maxSlots} AGENTS</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                    </div>
+                    </div>
+                    </div>
+
+                    {(() => {
+                    const currentSlots = data.roster?.players?.length || 0;
+                    const maxSlots = Number(data.maxSlots || "0");
+                    const isFull = currentSlots > 0 && currentSlots === maxSlots;
+                    const isRegistrationOpen = data.rawState === 0;
+                    const isTime = data.startTime ? Date.now() >= data.startTime : false;
+
+                    if (isRegistrationOpen && isFull && isTime) {
+                    return (
+                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                      <StartTournamentButton tournamentAddress={data.address!} />
+                    </div>
+                    );
+                    }
+                    return null;
+                    })()}            </div>
             <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex justify-end">
               <button onClick={() => setIsConfigOpen(false)} className="px-6 py-3 bg-[#131b2e] dark:bg-slate-800 text-white hover:bg-[#00E5FF] hover:text-black text-[11px] font-bold tracking-widest uppercase transition-all">
                 CLOSE
