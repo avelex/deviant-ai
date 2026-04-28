@@ -60,11 +60,11 @@ export function useTournaments() {
           };
 
           return {
-            id: config[8].toString(),
-            title: config[6],
+            id: config[6].toString(),
+            title: config[7],
             status: statusMap[state] || 'FINISHED',
             mainIcon: state === 1 ? 'zap' : state === 0 ? 'clock' : 'lock',
-            category: config[7],
+            category: config[8],
             mode: 'Solo', // Can be derived or mocked
             slots: `0/${config[3].toString()}`,
             timeLabel: state === 0 ? 'STARTS AT' : 'ENDED',

@@ -13,6 +13,6 @@ export const TOURNAMENT_FACTORY_ABI = parseAbi([
 ]);
 
 export const TOURNAMENT_ABI = parseAbi([
-  'function config() external view returns (address owner, address tee, uint256 slotPrice, uint256 maxSlots, uint16 feeRate, uint256 startTime, string name, string category, uint256 id, string liveUri)',
+  'function config() external view returns (address owner, address tee, uint256 slotPrice, uint256 maxSlots, uint16 feeRate, uint256 startTime, uint256 id, string name, string category, string liveUri)',
   'function state() external view returns (uint8)'
 ]);
