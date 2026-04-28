@@ -41,5 +41,6 @@ export const TOURNAMENT_ABI = parseAbi([
   'function getAgentKeys() external view returns (uint256[])',
   'function setLiveUri(string calldata _liveUri) external',
   'function joinTournament(uint256 agentId) external payable',
-  'function startTournament() external'
+  'function startTournament() external',
+  'function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature) external'
 ]);

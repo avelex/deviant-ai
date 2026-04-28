@@ -35,10 +35,10 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
 
   useEffect(() => {
     if (!liveUri) return;
-    
+
     // Derive HTTP URL from WebSocket URL
     const resultUrl = liveUri.replace(/^ws(s)?:\/\//, 'http$1://') + '/result';
-    
+
     const fetchResult = async () => {
       try {
         const response = await fetch(resultUrl);
@@ -66,14 +66,14 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
 
   const handleResolve = () => {
     if (!data.signer || !data.attestation) return;
-    
+
     writeContract({
       address: tournamentAddress as `0x${string}`,
       abi: TOURNAMENT_ABI,
       functionName: "resolveTournament",
       args: [
-        BigInt(data.winnerAgentId || data.result.winnerId), 
-        data.attestation.hash as `0x${string}`, 
+        BigInt(data.winnerAgentId || data.result.winnerId),
+        data.attestation.hash as `0x${string}`,
         data.signer.signature as `0x${string}`
       ],
     });
@@ -86,7 +86,7 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
       <h3 className="text-[11px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
         LIVE BROADCAST RESULT
       </h3>
-      
+
       {/* Game Section */}
       <div className="mb-6">
         <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white mb-2">Game</h4>
@@ -117,13 +117,13 @@ export function TournamentResult({ tournamentAddress, liveUri }: TournamentResul
 
       {/* Footer: Resolve Button */}
       <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/50">
-         <button
-           onClick={handleResolve}
-           disabled={isResolveDisabled}
-           className="w-full bg-[#00E5FF] text-black py-4 text-[11px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-         >
-           {isPending ? "RESOLVING..." : "RESOLVE GAME"}
-         </button>
+        <button
+          onClick={handleResolve}
+          disabled={isResolveDisabled}
+          className="w-full bg-[#00E5FF] text-black py-4 text-[11px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPending ? "RESOLVING..." : "RESOLVE GAME"}
+        </button>
       </div>
     </div>
   );
