@@ -29,7 +29,10 @@ interface TournamentListProps {
 export function TournamentList({ initialMarkets, onCreateClick }: TournamentListProps) {
   const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'REGISTRATION' | 'FINISHED'>('ALL');
 
+  const [sortBy, setSortBy] = useState<'createdAt' | 'startedAt' | 'finishedAt'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
 
@@ -38,13 +41,25 @@ export function TournamentList({ initialMarkets, onCreateClick }: TournamentList
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
         setIsFilterOpen(false);
       }
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const processedMarkets = initialMarkets
-    .filter(m => filter === 'ALL' || m.status === filter);
+  const processedMarkets = [...initialMarkets]
+    .filter(m => filter === 'ALL' || m.status === filter)
+    .sort((a, b) => {
+      const valA = a[sortBy] || 0;
+      const valB = b[sortBy] || 0;
+      if (sortOrder === 'asc') {
+        return valA > valB ? 1 : valA < valB ? -1 : 0;
+      } else {
+        return valA < valB ? 1 : valA > valB ? -1 : 0;
+      }
+    });
 
   return (
     <>
@@ -98,6 +113,42 @@ export function TournamentList({ initialMarkets, onCreateClick }: TournamentList
                     `}
                   >
                     {option}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sort Dropdown & Toggle */}
+          <div className="relative flex-1 md:flex-none flex" ref={sortRef}>
+            <button
+              onClick={() => setIsSortOpen(!isSortOpen)}
+              className="flex-1 md:flex-none flex items-center justify-between md:justify-center gap-2 border border-slate-200 dark:border-slate-800 border-r-0 px-4 py-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-[12px] font-semibold tracking-widest uppercase transition-colors rounded-none hover:border-[#00E5FF] dark:hover:border-[#00E5FF]"
+            >
+              <div className="flex items-center gap-2">
+                SORT: {sortBy === 'createdAt' ? 'CREATED' : sortBy === 'startedAt' ? 'STARTED' : 'FINISHED'}
+              </div>
+              <ChevronDown size={14} className={`transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <button
+              onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+              className="flex items-center justify-center border border-slate-200 dark:border-slate-800 px-3 py-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-[#00E5FF] dark:hover:border-[#00E5FF] transition-colors rounded-none"
+              title={`Sort ${sortOrder === 'desc' ? 'Ascending' : 'Descending'}`}
+            >
+              <ArrowUpDown size={14} strokeWidth={2} className={`transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isSortOpen && (
+              <div className="absolute top-full right-0 mt-1 w-full min-w-[160px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden backdrop-blur-md z-30">
+                {(['createdAt', 'startedAt', 'finishedAt'] as const).map(option => (
+                  <button
+                    key={option}
+                    onClick={() => { setSortBy(option); setIsSortOpen(false); }}
+                    className={`w-full text-left px-4 py-3 text-[12px] font-semibold tracking-widest uppercase transition-colors
+                      ${sortBy === option ? 'bg-[#00E5FF]/10 text-[#131b2e] dark:text-white border-l-2 border-[#00E5FF]' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#131b2e] dark:hover:text-white border-l-2 border-transparent'}
+                    `}
+                  >
+                    {option === 'createdAt' ? 'CREATED' : option === 'startedAt' ? 'STARTED' : 'FINISHED'}
                   </button>
                 ))}
               </div>
