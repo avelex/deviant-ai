@@ -44,3 +44,12 @@ export const TOURNAMENT_ABI = parseAbi([
   'function startTournament() external',
   'function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature, bool _noWinner) external'
 ]);
+
+export const AGENT_NFT_ADDRESS = "0xd032112434295a340E5de9fe04d28b932E8B57DA";
+
+export const AGENT_NFT_ABI = parseAbi([
+  'function totalSupply() external view returns (uint256)',
+  'function ownerOf(uint256 tokenId) external view returns (address)',
+  'struct IntelligentData { string dataDescription; bytes32 dataHash; }',
+  'function intelligentDatasOf(uint256 tokenId) external view returns (IntelligentData[] memory)'
+]);
