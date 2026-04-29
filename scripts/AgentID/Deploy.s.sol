@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Script, console} from "forge-std/Script.sol";
 import {AgentNFT} from "0g-agent-nft/AgentNFT.sol";
+import {Deviant} from "../../src/agent/Deviant.sol";
 import {MockDataVerifier} from "../../src/mocks/MockDataVerifier.sol";
 
 contract DeployAgentNFT is Script {
@@ -13,10 +14,10 @@ contract DeployAgentNFT is Script {
         vm.startBroadcast();
 
         MockDataVerifier mockDataVerifier = new MockDataVerifier();
-        AgentNFT implementation = new AgentNFT();
+        Deviant implementation = new Deviant();
 
         bytes memory initData = abi.encodeCall(
-            AgentNFT.initialize, ("Deviant Agent ID", "DAI", "storageInfo", address(mockDataVerifier), admin)
+            Deviant.initialize, ("Deviant Agent ID", "DAI", "storageInfo", address(mockDataVerifier), admin)
         );
 
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);

@@ -13,7 +13,7 @@ const AGENT_INDEX = parseInt(process.env.AGENT_INDEX!); // 0 for agent 1, 1 for 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
 const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x8a8802E765602BD93aB9aFa3deB3fACA46D9350f") as `0x${string}`;
 const TOURNAMENT_ADDRESS = process.env.TOURNAMENT_ADDRESS as `0x${string}`;
-const AGENT_ID_ADDRESS = (process.env.AGENT_ID_ADDRESS || "0xd032112434295a340E5de9fe04d28b932E8B57DA") as `0x${string}`;
+const AGENT_ID_ADDRESS = (process.env.AGENT_ID_ADDRESS || "0x06E824145Be317FbbC2386c6afD4D580786458D7") as `0x${string}`;
 
 const zeroGTestnet = defineChain({
     id: 16602,

@@ -5,7 +5,7 @@ import { createClient } from "@phala/cloud";
 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
 const FACTORY_ADDRESS = "0x8a8802E765602BD93aB9aFa3deB3fACA46D9350f" as `0x${string}`;
-const AGENT_ID_ADDRESS = "0xd032112434295a340E5de9fe04d28b932E8B57DA" as `0x${string}`;
+const AGENT_ID_ADDRESS = "0x06E824145Be317FbbC2386c6afD4D580786458D7" as `0x${string}`;
 
 const zeroGTestnet = defineChain({
   id: 16602,

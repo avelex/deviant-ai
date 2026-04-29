@@ -24,6 +24,8 @@ interface AgentDashboardProps {
 export function AgentDashboard({ initialAgents, loading, onRefresh }: AgentDashboardProps) {
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
+  console.log("initialAgents", initialAgents);
+
   return (
     <>
       {/* Page Header */}
@@ -62,11 +64,11 @@ export function AgentDashboard({ initialAgents, loading, onRefresh }: AgentDashb
       {/* Grid Layout */}
       {loading ? (
         <div className="text-center py-20 animate-pulse text-slate-500 text-sm font-bold tracking-widest uppercase">
-          FETCHING NEURAL ENTITIES...
+          FETCHING DEVIANTS...
         </div>
       ) : initialAgents.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 text-sm font-bold tracking-widest uppercase">
-          NO AGENTS FOUND FOR CONNECTED WALLET
+          NO DEVIANTS FOUND FOR CONNECTED WALLET
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 w-full transition-all">

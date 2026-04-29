@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, usePublicClient } from 'wagmi';
-import { AGENT_NFT_ADDRESS, AGENT_NFT_ABI } from '@/lib/web3';
+import { DEVIANT_ID_ADDRESS, DEVIANT_NFT_ABI } from '@/lib/web3';
 import { AgentStatus } from '@/components/agent-card';
 
 export interface Agent {
@@ -20,10 +20,12 @@ export function useAgents() {
   const publicClient = usePublicClient();
 
   const { data: totalSupply, isLoading: isTotalSupplyLoading, refetch: refetchTotalSupply } = useReadContract({
-    address: AGENT_NFT_ADDRESS,
-    abi: AGENT_NFT_ABI,
+    address: DEVIANT_ID_ADDRESS,
+    abi: DEVIANT_NFT_ABI,
     functionName: 'totalSupply',
   });
+
+  console.log('totalSupply', totalSupply);
 
   const fetchAgents = async () => {
     if (!totalSupply || !publicClient || !address) {
@@ -38,8 +40,8 @@ export function useAgents() {
 
       // Batch read owners
       const ownersCalls = tokenIds.map(id => ({
-        address: AGENT_NFT_ADDRESS,
-        abi: AGENT_NFT_ABI,
+        address: DEVIANT_ID_ADDRESS,
+        abi: DEVIANT_NFT_ABI,
         functionName: 'ownerOf',
         args: [BigInt(id)],
       }));
@@ -63,8 +65,8 @@ export function useAgents() {
 
       // Batch read intelligent datas for owned tokens
       const dataCalls = ownedTokenIds.map(id => ({
-        address: AGENT_NFT_ADDRESS,
-        abi: AGENT_NFT_ABI,
+        address: DEVIANT_ID_ADDRESS,
+        abi: DEVIANT_NFT_ABI,
         functionName: 'intelligentDatasOf',
         args: [BigInt(id)],
       }));
