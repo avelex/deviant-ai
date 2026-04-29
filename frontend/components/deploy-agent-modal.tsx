@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { X, Cpu, Activity } from "lucide-react";
+import { X, Cpu, Activity, Upload, CheckCircle2 } from "lucide-react";
+import { Indexer, MemData } from "@0gfoundation/0g-ts-sdk";
+import { ethers } from "ethers";
+import { useAccount, useWalletClient, useWriteContract, usePublicClient } from "wagmi";
+import { DEVIANT_ID_ADDRESS, DEVIANT_NFT_ABI, INDEXER_URL, RPC_URL } from "@/lib/web3";
 
 interface DeployAgentModalProps {
   isOpen: boolean;
@@ -12,26 +16,96 @@ export function DeployAgentModal({ isOpen, onClose }: DeployAgentModalProps) {
   const [agentName, setAgentName] = useState("");
   const [scriptCode, setScriptCode] = useState("");
   const [isDeploying, setIsDeploying] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [rootHash, setRootHash] = useState<string | null>(null);
+
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+  const { writeContractAsync } = useWriteContract();
 
   if (!isOpen) return null;
 
-  const isFormValid = agentName.trim().length > 0 && scriptCode.trim().length > 0;
+  const isFormValid = agentName.trim().length > 0 && scriptCode.trim().length > 0 && !!rootHash;
 
-  const handleDeploy = () => {
+  const handleUpload = async () => {
+    if (!scriptCode || !walletClient) return;
+
+    setIsUploading(true);
+    try {
+      // Convert walletClient to ethers signer
+      const provider = new ethers.BrowserProvider(walletClient);
+      const signer = await provider.getSigner();
+
+      const indexer = new Indexer(INDEXER_URL);
+      const data = new TextEncoder().encode(scriptCode);
+      const memData = new MemData(data);
+
+      console.log("[0G Upload] Calculating Merkle Tree...");
+      const [tree, treeErr] = await memData.merkleTree();
+      if (treeErr) throw new Error(`Merkle tree error: ${treeErr}`);
+
+      const hash = tree!.rootHash();
+      console.log(`[0G Upload] Root Hash: ${hash}`);
+
+      console.log("[0G Upload] Uploading to 0G Storage...");
+      const [tx, uploadErr] = await indexer.upload(memData, RPC_URL, signer);
+      if (uploadErr) throw new Error(`Upload error: ${uploadErr}`);
+
+      console.log("\n[0G Upload] SUCCESS!");
+      setRootHash(hash);
+    } catch (error: any) {
+      console.error(`\n[0G Upload] FAILED: ${error.message}`);
+      alert(`Upload failed: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeploy = async () => {
+    if (!isFormValid || !address || !rootHash) return;
+
     setIsDeploying(true);
-    // Simulate deployment delay
-    setTimeout(() => {
-      setIsDeploying(false);
+    try {
+      // 1. Get Mint Fee
+      const mintFee = await publicClient?.readContract({
+        address: DEVIANT_ID_ADDRESS,
+        abi: DEVIANT_NFT_ABI,
+        functionName: 'getMintFee',
+      }) as bigint;
+
+      // 2. Mint Agent NFT with script hash
+      const intelligentData = [
+        {
+          dataDescription: "script",
+          dataHash: rootHash as `0x${string}`,
+        }
+      ];
+
+      await writeContractAsync({
+        address: DEVIANT_ID_ADDRESS,
+        abi: DEVIANT_NFT_ABI,
+        functionName: 'mint',
+        args: [intelligentData, address],
+        value: mintFee,
+      });
+
       setAgentName("");
       setScriptCode("");
+      setRootHash(null);
       onClose();
-    }, 2000);
+    } catch (error: any) {
+      console.error("Deployment failed:", error);
+      alert(`Deployment failed: ${error.message}`);
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-[#131b2e]/80 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
@@ -50,7 +124,7 @@ export function DeployAgentModal({ isOpen, onClose }: DeployAgentModalProps) {
               </h2>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-2"
           >
@@ -65,13 +139,13 @@ export function DeployAgentModal({ isOpen, onClose }: DeployAgentModalProps) {
             <h3 className="text-[13px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white">
               Metadata
             </h3>
-            
+
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
                 Agent Designation (Name)
               </label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={agentName}
                 onChange={(e) => setAgentName(e.target.value)}
                 placeholder="e.g. ALPHA-STRIKER-01"
@@ -83,23 +157,59 @@ export function DeployAgentModal({ isOpen, onClose }: DeployAgentModalProps) {
 
           {/* SEC 2: SCRIPT */}
           <div className="flex flex-col gap-4">
-            <h3 className="text-[13px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white">
-              Script
-            </h3>
-            
+            <div className="flex items-center justify-between">
+              <h3 className="text-[13px] font-bold tracking-widest uppercase text-[#131b2e] dark:text-white">
+                Script
+              </h3>
+              {scriptCode && !rootHash && (
+                <button
+                  onClick={handleUpload}
+                  disabled={isUploading}
+                  className="flex items-center gap-2 px-4 py-1.5 bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 text-[10px] font-bold tracking-widest uppercase hover:bg-[#00E5FF]/20 transition-all disabled:opacity-50"
+                >
+                  {isUploading ? 'UPLOADING...' : 'UPLOAD TO 0G'}
+                  {!isUploading && <Upload size={12} />}
+                </button>
+              )}
+              {rootHash && (
+                <div className="flex items-center gap-1.5 text-emerald-500 text-[10px] font-bold tracking-widest uppercase">
+                  <CheckCircle2 size={12} />
+                  UPLOADED
+                </div>
+              )}
+            </div>
+
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
                 TypeScript Execution Logic
               </label>
-              <textarea 
+              <textarea
                 value={scriptCode}
-                onChange={(e) => setScriptCode(e.target.value)}
+                onChange={(e) => {
+                  setScriptCode(e.target.value);
+                  setRootHash(null); // Reset hash if code changes
+                }}
                 placeholder="// Enter agent logic here..."
                 className="border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 font-mono text-xs text-slate-700 dark:text-slate-300 focus:border-[#00E5FF] dark:focus:border-[#00E5FF] outline-none transition-colors min-h-[200px] resize-y"
                 spellCheck={false}
               />
             </div>
           </div>
+
+          {/* SEC 3: STORAGE INFO (CONDITIONAL) */}
+          {rootHash && (
+            <div className="flex flex-col gap-4 p-4 bg-emerald-500/5 border border-emerald-500/20 animate-in fade-in slide-in-from-top-2">
+              <h3 className="text-[11px] font-bold tracking-widest uppercase text-emerald-600 dark:text-emerald-400">
+                0G Storage Confirmation
+              </h3>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Root Hash</span>
+                <code className="text-[10px] break-all text-emerald-700 dark:text-emerald-300 font-mono">
+                  {rootHash}
+                </code>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

@@ -1,7 +1,10 @@
 import { createPublicClient, http, parseAbi, defineChain } from 'viem';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { BrowserProvider, JsonRpcSigner } from 'ethers';
+import type { Account, Chain, Client, Transport } from 'viem';
 
 export const RPC_URL = "https://evmrpc-testnet.0g.ai";
+export const INDEXER_URL = "https://indexer-storage-testnet-turbo.0g.ai";
 export const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS! as `0x${string}`;
 export const DEVIANT_ID_ADDRESS = process.env.NEXT_PUBLIC_DEVIANT_ID_ADDRESS! as `0x${string}`;
 
@@ -50,5 +53,20 @@ export const DEVIANT_NFT_ABI = parseAbi([
   'function totalSupply() external view returns (uint256)',
   'function ownerOf(uint256 tokenId) external view returns (address)',
   'struct IntelligentData { string dataDescription; bytes32 dataHash; }',
-  'function intelligentDatasOf(uint256 tokenId) external view returns (IntelligentData[] memory)'
+  'function intelligentDatasOf(uint256 tokenId) external view returns (IntelligentData[] memory)',
+  'function mint(IntelligentData[] calldata iDatas, address to) external payable returns (uint256)',
+  'function getMintFee() external view returns (uint256)'
 ]);
+
+export function clientToSigner(client: Client<Transport, Chain, Account>) {
+  const { account, chain, transport } = client;
+  const network = {
+    chainId: chain.id,
+    name: chain.name,
+    ensAddress: chain.contracts?.ensRegistry?.address,
+  };
+  const provider = new BrowserProvider(transport, network);
+  const signer = new JsonRpcSigner(provider, account.address);
+  return signer;
+}
+
