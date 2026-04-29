@@ -18,6 +18,12 @@ export const zeroGGalileo = defineChain({
   blockExplorers: {
     default: { name: '0G Scan', url: 'https://chainscan-testnet.0g.ai' },
   },
+  contracts: {
+    multicall3: {
+      address: '0xca11bde05977b3631167028862be2a173976ca11',
+      blockCreated: 297775, // Approximate block number if known, otherwise omitted or low value
+    },
+  },
   testnet: true,
 });
 
