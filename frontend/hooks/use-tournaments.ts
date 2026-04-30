@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useReadContract, usePublicClient } from 'wagmi';
 import { FACTORY_ADDRESS, TOURNAMENT_FACTORY_ABI, TOURNAMENT_ABI } from '@/lib/web3';
 import { TournamentStatus } from '@/components/tournament-card';
@@ -38,34 +38,35 @@ export function useTournaments() {
     functionName: 'getTournaments',
   });
 
-  const fetchTournamentDetails = async () => {
+  const fetchTournamentDetails = useCallback(async () => {
     if (!addresses || !publicClient) return;
     setLoading(true);
 
     try {
       const results = await Promise.all((addresses as `0x${string}`[]).map(async (address) => {
-        const config = await publicClient.readContract({
-          address,
-          abi: TOURNAMENT_ABI,
-          functionName: 'config'
-        });
-
-        const state = await publicClient.readContract({
-          address,
-          abi: TOURNAMENT_ABI,
-          functionName: 'state'
-        }) as number;
-
-        let agentKeys: bigint[] = [];
-        try {
-          agentKeys = await publicClient.readContract({
+        const [config, state, agentKeysResult] = await Promise.all([
+          publicClient.readContract({
+            address,
+            abi: TOURNAMENT_ABI,
+            functionName: 'config'
+          }),
+          publicClient.readContract({
+            address,
+            abi: TOURNAMENT_ABI,
+            functionName: 'state'
+          }),
+          publicClient.readContract({
             address,
             abi: TOURNAMENT_ABI,
             functionName: 'getAgentKeys'
-          }) as bigint[];
-        } catch (e) {
-          console.error("Failed to fetch agent keys", e);
-        }
+          }).catch((e) => {
+            console.error("Failed to fetch agent keys", e);
+            return [] as bigint[];
+          })
+        ]);
+
+        const agentKeys = agentKeysResult as bigint[];
+        const rawState = state as number;
 
         const statusMap: Record<number, TournamentStatus> = {
           0: 'REGISTRATION',
@@ -89,12 +90,12 @@ export function useTournaments() {
         return {
           id: id.toString(),
           title: name,
-          status: statusMap[state] || 'FINISHED',
-          mainIcon: state === 1 ? 'zap' : state === 0 ? 'clock' : 'lock',
+          status: statusMap[rawState] || 'FINISHED',
+          mainIcon: rawState === 1 ? 'zap' : rawState === 0 ? 'clock' : 'lock',
           category: category,
           mode: 'Solo',
           slots: `${agentKeys.length}/${maxSlots.toString()}`,
-          timeLabel: state === 0 ? 'STARTS AT' : 'ENDED',
+          timeLabel: rawState === 0 ? 'STARTS AT' : 'ENDED',
           timeValue: new Date(Number(startedAt) * 1000).toLocaleString(),
           reward: `${Number(0)} 0G`,
           rewardValue: Number(slotPrice),
@@ -104,7 +105,7 @@ export function useTournaments() {
           owner: owner,
           teeAddress: teeAddress,
           liveUri: liveUri,
-          rawState: state,
+          rawState: rawState,
           slotPrice: slotPrice,
           startedAt: Number(startedAt) * 1000,
           agentKeys: agentKeys.map(k => k.toString())
@@ -117,15 +118,21 @@ export function useTournaments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addresses, publicClient]);
 
   useEffect(() => {
     if (addresses) {
-      fetchTournamentDetails();
-    } else if (!isAddressesLoading && loading) {
-      setLoading(false);
+      const timeout = setTimeout(() => {
+        fetchTournamentDetails();
+      }, 0);
+      return () => clearTimeout(timeout);
+    } else if (!isAddressesLoading) {
+      const timeout = setTimeout(() => {
+        setLoading(false);
+      }, 0);
+      return () => clearTimeout(timeout);
     }
-  }, [addresses, publicClient, isAddressesLoading]);
+  }, [addresses, isAddressesLoading, fetchTournamentDetails]);
 
   const refresh = async () => {
     await refetchAddresses();

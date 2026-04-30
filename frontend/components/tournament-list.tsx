@@ -132,8 +132,9 @@ export function TournamentList({ initialMarkets, onCreateClick }: TournamentList
             </button>
             <button
               onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-              className="flex items-center justify-center border border-slate-200 dark:border-slate-800 px-3 py-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-[#00E5FF] dark:hover:border-[#00E5FF] transition-colors rounded-none"
+              className="flex items-center justify-center border border-slate-200 dark:border-slate-800 px-3 py-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-[#00E5FF] dark:hover:border-[#00E5FF] transition-colors rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] focus-visible:z-10"
               title={`Sort ${sortOrder === 'desc' ? 'Ascending' : 'Descending'}`}
+              aria-label={`Sort ${sortOrder === 'desc' ? 'ascending' : 'descending'}`}
             >
               <ArrowUpDown size={14} strokeWidth={2} className={`transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
             </button>

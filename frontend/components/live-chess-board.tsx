@@ -16,11 +16,16 @@ export function LiveChessBoard({ liveUri, isActive }: LiveChessBoardProps) {
 
   useEffect(() => {
     if (!liveUri) {
-      setConnectionStatus(isActive ? "NO LIVE URI PROVIDED" : "TOURNAMENT NOT ACTIVE");
-      return;
+      const timeout = setTimeout(() => {
+        setConnectionStatus(isActive ? "NO LIVE URI PROVIDED" : "TOURNAMENT NOT ACTIVE");
+      }, 0);
+      return () => clearTimeout(timeout);
     }
 
-    setConnectionStatus("CONNECTING...");
+    const connectTimeout = setTimeout(() => {
+      setConnectionStatus("CONNECTING...");
+    }, 0);
+
     const ws = new WebSocket(liveUri);
     wsRef.current = ws;
 
@@ -67,6 +72,7 @@ export function LiveChessBoard({ liveUri, isActive }: LiveChessBoardProps) {
     };
 
     return () => {
+      clearTimeout(connectTimeout);
       ws.close();
     };
   }, [liveUri, isActive]);

@@ -5,6 +5,7 @@ import { Header } from "@/components/header";
 import { TournamentList } from "@/components/tournament-list";
 import { CreateTournamentModal } from "@/components/create-tournament-modal";
 import { useTournaments } from "@/hooks/use-tournaments";
+import { TournamentCardSkeleton } from "@/components/tournament-card-skeleton";
 
 export default function Page() {
   const { tournaments, loading } = useTournaments();
@@ -17,7 +18,12 @@ export default function Page() {
       <main className="flex-1 pt-24 pb-12 px-4 md:px-8 lg:px-12">
         <div className="max-w-[1200px] mx-auto">
           {loading ? (
-            <div className="text-center py-20 animate-pulse text-slate-500">LOADING TOURNAMENTS...</div>
+            <div className="flex flex-col gap-4">
+              <div className="h-12 w-64 bg-slate-100 dark:bg-slate-800 animate-pulse mb-8" />
+              {[...Array(5)].map((_, i) => (
+                <TournamentCardSkeleton key={i} />
+              ))}
+            </div>
           ) : (
             <TournamentList initialMarkets={tournaments} onCreateClick={() => setIsCreateModalOpen(true)} />
           )}

@@ -9,6 +9,9 @@ import { useAccount, useWriteContract } from "wagmi";
 import { AdminPanel } from "./admin-panel";
 import { TOURNAMENT_ABI } from "@/lib/web3";
 import { formatEther } from "viem";
+import { ConfigurationModal } from "./configuration-modal";
+import { RulesModal } from "./rules-modal";
+import { StartTournamentButton } from "./start-tournament-button";
 
 interface TournamentDetailProps {
   data: TournamentData;
@@ -34,7 +37,7 @@ function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: stri
     return (
       <button
         onClick={() => setIsJoining(true)}
-        className="w-full border border-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF] hover:text-black text-[#00E5FF] p-4 flex items-center justify-center mt-2 transition-all font-bold tracking-widest uppercase text-[11px] shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_20px_rgba(0,229,255,0.3)]"
+        className="w-full border border-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF] hover:text-black text-[#00E5FF] p-4 flex items-center justify-center mt-2 transition-all font-bold tracking-widest uppercase text-[11px] shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_20px_rgba(0,229,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF]"
       >
         JOIN TOURNAMENT
       </button>
@@ -48,19 +51,19 @@ function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: stri
         placeholder="ENTER AGENT NFT ID"
         value={agentId}
         onChange={(e) => setAgentId(e.target.value)}
-        className="bg-transparent border-b border-[#00E5FF]/50 text-[#00E5FF] text-xs py-2 px-1 outline-none placeholder:text-[#00E5FF]/30 font-bold tracking-widest"
+        className="bg-transparent border-b border-[#00E5FF]/50 text-[#00E5FF] text-xs py-2 px-1 outline-none focus-visible:border-[#00E5FF] focus-visible:ring-1 focus-visible:ring-[#00E5FF]/30 placeholder:text-[#00E5FF]/30 font-bold tracking-widest"
       />
       <div className="flex gap-2">
         <button
           onClick={handleJoin}
           disabled={isPending}
-          className="flex-1 bg-[#00E5FF] text-black p-2 text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
+          className="flex-1 bg-[#00E5FF] text-black p-2 text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
           {isPending ? "JOINING..." : "CONFIRM JOIN"}
         </button>
         <button
           onClick={() => setIsJoining(false)}
-          className="px-3 border border-slate-700 text-slate-500 hover:text-white text-[10px] font-bold tracking-widest uppercase"
+          className="px-3 border border-slate-700 text-slate-500 hover:text-white text-[10px] font-bold tracking-widest uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
         >
           CANCEL
         </button>
@@ -69,32 +72,11 @@ function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: stri
   );
 }
 
-function StartTournamentButton({ tournamentAddress, disabled }: { tournamentAddress: string, disabled?: boolean }) {
-  const { writeContract, isPending } = useWriteContract();
-
-  const handleStart = () => {
-    writeContract({
-      address: tournamentAddress as `0x${string}`,
-      abi: TOURNAMENT_ABI,
-      functionName: "startTournament",
-    });
-  };
-
-  return (
-    <button
-      onClick={handleStart}
-      disabled={isPending || disabled}
-      className="px-6 py-3 bg-[#00E5FF] text-black hover:bg-white text-[11px] font-bold tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.5]"
-    >
-      {isPending ? "STARTING..." : "START TOURNAMENT"}
-    </button>
-  );
-}
 export function TournamentDetail({ data }: TournamentDetailProps) {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const { address: connectedAddress } = useAccount();
-  const isOwner = connectedAddress && data.owner && connectedAddress.toLowerCase() === data.owner.toLowerCase();
+  const isOwner = !!(connectedAddress && data.owner && connectedAddress.toLowerCase() === data.owner.toLowerCase());
 
   return (
     <>
@@ -111,7 +93,7 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsConfigOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 hover:border-[#00E5FF] dark:hover:border-[#00E5FF] bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold tracking-widest uppercase transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 hover:border-[#00E5FF] dark:hover:border-[#00E5FF] bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold tracking-widest uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF]"
           >
             <Settings size={14} className="text-slate-500" />
             <span className="text-[#131b2e] dark:text-white">CONFIGURATION</span>
@@ -119,7 +101,7 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
 
           <button
             onClick={() => setIsRulesOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 hover:border-[#00E5FF] dark:hover:border-[#00E5FF] bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold tracking-widest uppercase transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 hover:border-[#00E5FF] dark:hover:border-[#00E5FF] bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold tracking-widest uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF]"
           >
             <FileText size={14} className="text-slate-500" />
             <span className="text-[#131b2e] dark:text-white">RULES</span>
@@ -192,7 +174,7 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                       </div>
                     </div>
 
-                    <button className="min-w-[80px] sm:min-w-[100px] border-l border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center bg-white dark:bg-slate-950 hover:bg-[#00E5FF] hover:text-black hover:border-transparent text-[#131b2e] dark:text-white transition-all cursor-pointer">
+                    <button className="min-w-[80px] sm:min-w-[100px] border-l border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center bg-white dark:bg-slate-950 hover:bg-[#00E5FF] hover:text-black hover:border-transparent text-[#131b2e] dark:text-white transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] focus-visible:ring-inset">
                       <span className="text-lg font-bold leading-none mb-1">{odds}</span>
                       <span className="text-[9px] font-bold tracking-widest uppercase opacity-70 leading-none">ODDS</span>
                     </button>
@@ -255,130 +237,18 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
         </div>
       </div>
 
-      {/* Config Modal */}
-      {isConfigOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-[#131b2e]/80 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={() => setIsConfigOpen(false)} />
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-[#00E5FF]/20 shadow-[0_0_40px_rgba(0,229,255,0.1)] flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="font-display text-xl font-light text-[#131b2e] dark:text-white uppercase tracking-tight leading-none">
-                Configuration
-              </h2>
-              <button onClick={() => setIsConfigOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-2">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="border border-slate-100 dark:border-slate-800/50 p-4 shrink-0 shadow-sm shadow-slate-100/50 dark:shadow-none bg-slate-50/50 dark:bg-slate-900/50">
-                  <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Category</div>
-                  <div className="text-lg text-[#131b2e] dark:text-white font-medium">{data.parameters.category}</div>
-                </div>
-                <div className="border border-slate-100 dark:border-slate-800/50 p-4 shrink-0 shadow-sm shadow-slate-100/50 dark:shadow-none bg-slate-50/50 dark:bg-slate-900/50">
-                  <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Type</div>
-                  <div className="text-lg text-[#131b2e] dark:text-white font-medium">{data.parameters.type}</div>
-                </div>
-                <div className="border border-slate-100 dark:border-slate-800/50 p-4 shrink-0 shadow-sm shadow-slate-100/50 dark:shadow-none bg-slate-50/50 dark:bg-slate-900/50">
-                  <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Duration</div>
-                  <div className="text-lg text-[#131b2e] dark:text-white font-medium">{data.parameters.duration}</div>
-                </div>
-                <div className="border-y border-r border-slate-100 dark:border-slate-800/50 border-l-[3px] border-l-[#00E5FF] p-4 bg-white dark:bg-slate-900 shadow-sm shadow-slate-100/50 dark:shadow-none">
-                  <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Reward</div>
-                  <div className="text-lg text-[#131b2e] dark:text-white font-bold">{data.parameters.reward}</div>
-                </div>
-              </div>
+      <ConfigurationModal
+        isOpen={isConfigOpen}
+        onClose={() => setIsConfigOpen(false)}
+        data={data}
+        isOwner={isOwner}
+      />
 
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-                <h3 className="text-[11px] font-bold tracking-widest uppercase text-slate-500 mb-4">
-                  Technical Parameters
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
-                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Owner Address</div>
-                    <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">{data.owner}</div>
-                  </div>
-                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
-                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">TEE Address</div>
-                    <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
-                      {data.teeAddress && data.teeAddress !== "0x0000000000000000000000000000000000000000" ? data.teeAddress : "NOT SET"}
-                    </div>
-                  </div>
-                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
-                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Slot Price</div>
-                    <div className="text-[13px] text-[#131b2e] dark:text-white font-bold">
-                      {data.slotPrice ? `${formatEther(data.slotPrice)} 0G` : "FREE"}
-                    </div>
-                  </div>
-                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
-                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Max Capacity</div>
-                    <div className="text-[13px] text-[#131b2e] dark:text-white font-bold">{data.maxSlots} AGENTS</div>
-                  </div>
-                  <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30 md:col-span-2">
-                    <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Live URI</div>
-                    <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">{data.liveUri || "NOT SET"}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex justify-between items-center">
-              {(() => {
-                const currentSlots = data.roster?.players?.length || 0;
-                const maxSlots = Number(data.maxSlots || "0");
-                const isFull = currentSlots > 0 && currentSlots === maxSlots;
-                const isRegistrationOpen = data.rawState === 0;
-                const isTime = data.startedAt ? Date.now() >= data.startedAt : true;
-                const canStart = isRegistrationOpen && isFull && isTime && isOwner;
-
-                return (
-                  <StartTournamentButton
-                    tournamentAddress={data.address!}
-                    disabled={!canStart}
-                  />
-                );
-              })()}
-              <button onClick={() => setIsConfigOpen(false)} className="px-6 py-3 bg-[#131b2e] dark:bg-slate-800 text-white hover:bg-[#00E5FF] hover:text-black text-[11px] font-bold tracking-widest uppercase transition-all">
-                CLOSE
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Rules Modal */}
-      {isRulesOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-[#131b2e]/80 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={() => setIsRulesOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-[#00E5FF]/20 shadow-[0_0_40px_rgba(0,229,255,0.1)] flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="font-display text-xl font-light text-[#131b2e] dark:text-white uppercase tracking-tight leading-none">
-                Execution Rules
-              </h2>
-              <button onClick={() => setIsRulesOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-2">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              <ul className="flex flex-col gap-4">
-                {data.rules.map((rule, idx) => (
-                  <li key={idx} className="flex items-start gap-3.5 text-sm md:text-[15px] font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <div className="relative shrink-0 mt-1">
-                      <div className="w-5 h-5 rounded-full bg-[#00E5FF] flex items-center justify-center">
-                        <Check size={12} strokeWidth={3} color="black" />
-                      </div>
-                    </div>
-                    {rule}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex justify-end">
-              <button onClick={() => setIsRulesOpen(false)} className="px-6 py-3 bg-[#131b2e] dark:bg-slate-800 text-white hover:bg-[#00E5FF] hover:text-black text-[11px] font-bold tracking-widest uppercase transition-all">
-                UNDERSTOOD
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RulesModal
+        isOpen={isRulesOpen}
+        onClose={() => setIsRulesOpen(false)}
+        rules={data.rules}
+      />
     </>
   );
 }

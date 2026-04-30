@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useReadContract, usePublicClient } from 'wagmi';
 import { DEVIANT_ID_ADDRESS, DEVIANT_NFT_ABI } from '@/lib/web3';
 import { AgentStatus } from '@/components/agent-card';
@@ -27,7 +27,7 @@ export function useAgents() {
 
   console.log('totalSupply', totalSupply);
 
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     if (!totalSupply || !publicClient || !address) {
       if (!isTotalSupplyLoading) setLoading(false);
       return;
@@ -102,11 +102,14 @@ export function useAgents() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [totalSupply, address, publicClient, isTotalSupplyLoading]);
 
   useEffect(() => {
-    fetchAgents();
-  }, [totalSupply, address, publicClient, isTotalSupplyLoading]);
+    const timeout = setTimeout(() => {
+      fetchAgents();
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [fetchAgents]);
 
   const refresh = async () => {
     await refetchTotalSupply();

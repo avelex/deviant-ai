@@ -16,12 +16,24 @@ const CATEGORIES = ["chess", "trading", "gaming"];
 export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    category: "chess",
-    maxSlots: "2",
+    category: "Chess",
     slotPrice: "0",
     feeRate: "0",
-    startedAt: Math.floor(Date.now() + 5 * 60 * 1000) / 1000
+    maxSlots: "8",
+    startedAt: 0
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      const timeout = setTimeout(() => {
+        setFormData(prev => ({
+          ...prev,
+          startedAt: Math.floor(Date.now() + 5 * 60 * 1000) / 1000
+        }));
+      }, 0);
+      return () => clearTimeout(timeout);
+    }
+  }, [isOpen]);
 
   const { writeContract, data: hash, isPending, error } = useWriteContract();
 
