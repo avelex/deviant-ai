@@ -76,8 +76,7 @@ contract Tournament is ITournament, Initializable, ReentrancyGuardUpgradeable {
     }
 
     function placeBet(uint256 _agentId) external payable {
-        require(state == ITournament.State.Registration || state == ITournament.State.Active, "Invalid state");
-        require(block.timestamp < config.startedAt, "Betting window closed");
+        require(state == ITournament.State.Registration, "Invalid state");
         require(msg.value > 0, "Bet must be > 0");
         require(agents.contains(_agentId), "Agent not in tournament");
 
@@ -166,5 +165,13 @@ contract Tournament is ITournament, Initializable, ReentrancyGuardUpgradeable {
 
     function getAgentKeys() public view returns (uint256[] memory) {
         return agents.keys();
+    }
+
+    function getOdds(uint256 _agentId) public view returns (uint256) {
+        if (totalBetsOnAgent[_agentId] == 0) {
+            return 0;
+        }
+        uint256 netBetsPool = totalBetsPool - ((totalBetsPool * config.feeRate) / FEE_RATE_MAX_BPS);
+        return (netBetsPool * 1e18) / totalBetsOnAgent[_agentId];
     }
 }

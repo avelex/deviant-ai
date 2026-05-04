@@ -125,6 +125,33 @@ contract TournamentRewardsTest is Test {
         tournament.claimRewards();
     }
 
+    function test_GetOdds() public {
+        vm.prank(user1);
+        tournament.joinTournament{value: SLOT_PRICE}(1);
+        vm.prank(user2);
+        tournament.joinTournament{value: SLOT_PRICE}(2);
+
+        // Total Bets Pool = 10 ETH
+        // Agent 1: 2 ETH
+        // Agent 2: 8 ETH
+        // Fee: 10%
+        // Net Bets Pool: 9 ETH
+        
+        vm.prank(bettor1);
+        tournament.placeBet{value: 2 ether}(1);
+        vm.prank(bettor2);
+        tournament.placeBet{value: 8 ether}(2);
+
+        // Odds for Agent 1: (9 * 1e18) / 2 = 4.5 * 1e18
+        assertEq(tournament.getOdds(1), 4.5 * 1e18);
+        
+        // Odds for Agent 2: (9 * 1e18) / 8 = 1.125 * 1e18
+        assertEq(tournament.getOdds(2), 1.125 * 1e18);
+
+        // Odds for non-existent or no-bet agent
+        assertEq(tournament.getOdds(3), 0);
+    }
+
     function test_ClaimRewards_NoWinner() public {
         // 1. Join
         vm.prank(user1);

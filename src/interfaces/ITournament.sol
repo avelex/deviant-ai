@@ -39,4 +39,6 @@ interface ITournament {
     function claimRewards() external;
 
     function setTee(address tee) external;
+
+    function getOdds(uint256 agentId) external view returns (uint256);
 }
