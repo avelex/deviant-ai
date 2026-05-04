@@ -6,7 +6,6 @@ import { TournamentData } from "@/lib/mock-data";
 import { LiveChessBoard } from "@/components/live-chess-board";
 import { TournamentResult } from "@/components/tournament-result";
 import { useAccount, useWriteContract, useReadContract } from "wagmi";
-import { AdminPanel } from "./admin-panel";
 import { TOURNAMENT_ABI } from "@/lib/web3";
 import { formatEther, parseEther } from "viem";
 import { ConfigurationModal } from "./configuration-modal";
@@ -316,12 +315,7 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
             </div>
           </div>
 
-          {isOwner && data.address && (
-            <div className="mt-6 lg:mt-8">
-              <AdminPanel tournamentAddress={data.address} />
-            </div>
-          )}
-
+          {/* Admin panel was here */}
         </div>
       </div>
 

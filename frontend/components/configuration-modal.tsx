@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { X } from "lucide-react";
 import { formatEther } from "viem";
+import { useWriteContract } from "wagmi";
+import { FACTORY_ADDRESS, TOURNAMENT_FACTORY_ABI, TOURNAMENT_ABI } from "@/lib/web3";
 import { TournamentData } from "@/lib/mock-data";
 import { StartTournamentButton } from "./start-tournament-button";
 
@@ -13,7 +16,31 @@ interface ConfigurationModalProps {
 }
 
 export function ConfigurationModal({ isOpen, onClose, data, isOwner }: ConfigurationModalProps) {
+  const [teeAddress, setTeeAddress] = useState("");
+  const [liveUri, setLiveUri] = useState("");
+  const { writeContract } = useWriteContract();
+
   if (!isOpen) return null;
+
+  const handleSetTee = () => {
+    if (!data.address) return;
+    writeContract({
+      address: FACTORY_ADDRESS,
+      abi: TOURNAMENT_FACTORY_ABI,
+      functionName: "setTournamentTee",
+      args: [data.address as `0x${string}`, teeAddress as `0x${string}`],
+    });
+  };
+
+  const handleSetLiveUri = () => {
+    if (!data.address) return;
+    writeContract({
+      address: data.address as `0x${string}`,
+      abi: TOURNAMENT_ABI,
+      functionName: "setLiveUri",
+      args: [liveUri],
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -58,9 +85,27 @@ export function ConfigurationModal({ isOpen, onClose, data, isOwner }: Configura
               </div>
               <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
                 <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">TEE Address</div>
-                <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
-                  {data.teeAddress && data.teeAddress !== "0x0000000000000000000000000000000000000000" ? data.teeAddress : "NOT SET"}
-                </div>
+                {isOwner && (!data.teeAddress || data.teeAddress === "0x0000000000000000000000000000000000000000") ? (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={teeAddress}
+                      onChange={(e) => setTeeAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2 text-xs font-mono focus:border-[#00E5FF] outline-none transition-colors"
+                    />
+                    <button
+                      onClick={handleSetTee}
+                      className="px-3 py-2 bg-[#131b2e] dark:bg-slate-800 text-white hover:bg-[#00E5FF] hover:text-black text-[10px] font-bold tracking-widest uppercase transition-all"
+                    >
+                      SET
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+                    {data.teeAddress && data.teeAddress !== "0x0000000000000000000000000000000000000000" ? data.teeAddress : "NOT SET"}
+                  </div>
+                )}
               </div>
               <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30">
                 <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Slot Price</div>
@@ -74,7 +119,27 @@ export function ConfigurationModal({ isOpen, onClose, data, isOwner }: Configura
               </div>
               <div className="border border-slate-100 dark:border-slate-800/50 p-4 bg-slate-50/30 dark:bg-slate-900/30 md:col-span-2">
                 <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Live URI</div>
-                <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">{data.liveUri || "NOT SET"}</div>
+                {isOwner && data.rawState === 0 ? (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={liveUri}
+                      onChange={(e) => setLiveUri(e.target.value)}
+                      placeholder={data.liveUri || "https://..."}
+                      className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2 text-xs font-mono focus:border-[#00E5FF] outline-none transition-colors"
+                    />
+                    <button
+                      onClick={handleSetLiveUri}
+                      className="px-3 py-2 bg-[#131b2e] dark:bg-slate-800 text-white hover:bg-[#00E5FF] hover:text-black text-[10px] font-bold tracking-widest uppercase transition-all"
+                    >
+                      SET
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-[13px] text-[#131b2e] dark:text-white font-mono break-all">
+                    {data.liveUri || "NOT SET"}
+                  </div>
+                )}
               </div>
             </div>
           </div>
