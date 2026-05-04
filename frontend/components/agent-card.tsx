@@ -1,5 +1,4 @@
 import { Cpu, Power, Activity } from "lucide-react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export type AgentStatus = 'ACTIVE' | 'IDLE' | 'OFFLINE';
@@ -12,14 +11,18 @@ export interface AgentCardProps {
   model: string;
   performance: string;
   uptime: string;
+  onClick?: () => void;
 }
 
-export function AgentCard({ id, name, status, type, model, performance, uptime }: AgentCardProps) {
+export function AgentCard({ id, name, status, type, model, performance, uptime, onClick }: AgentCardProps) {
   const isActive = status === 'ACTIVE';
   const isIdle = status === 'IDLE';
 
   return (
-    <article className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 xl:p-8 flex flex-col transition-all duration-300 relative overflow-hidden rounded-none hover:border-[#00E5FF] dark:hover:border-[#00E5FF]">
+    <article 
+      onClick={onClick}
+      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 xl:p-8 flex flex-col transition-all duration-300 relative overflow-hidden rounded-none hover:border-[#00E5FF] dark:hover:border-[#00E5FF] cursor-pointer"
+    >
       
       {/* Background glow on hover */}
       {isActive && (
@@ -36,11 +39,9 @@ export function AgentCard({ id, name, status, type, model, performance, uptime }
         </div>
         
         <div className="flex flex-col">
-          <Link href={`/agents/${id}`}>
-            <h2 className="font-display text-xl lg:text-2xl font-light tracking-tight text-[#131b2e] dark:text-white uppercase m-0 leading-none mb-1 group-hover:text-[#00E5FF] transition-colors cursor-pointer">
-              {name}
-            </h2>
-          </Link>
+          <h2 className="font-display text-xl lg:text-2xl font-light tracking-tight text-[#131b2e] dark:text-white uppercase m-0 leading-none mb-1 group-hover:text-[#00E5FF] transition-colors">
+            {name}
+          </h2>
           <div className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">
             ID: {id}
           </div>

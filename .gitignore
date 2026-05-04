@@ -15,4 +15,3 @@ coverage/
 !.env.example
 
 .worktrees/
-scripts/ts/llm_agent.ts

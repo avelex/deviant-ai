@@ -70,7 +70,8 @@ export const DEVIANT_NFT_ABI = parseAbi([
   'struct IntelligentData { string dataDescription; bytes32 dataHash; }',
   'function intelligentDatasOf(uint256 tokenId) external view returns (IntelligentData[] memory)',
   'function mint(IntelligentData[] calldata iDatas, address to) external payable returns (uint256)',
-  'function getMintFee() external view returns (uint256)'
+  'function getMintFee() external view returns (uint256)',
+  'function update(uint256 tokenId, IntelligentData[] calldata newDatas) external'
 ]);
 
 export function clientToSigner(client: Client<Transport, Chain, Account>) {

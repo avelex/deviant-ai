@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AgentCard, AgentStatus } from "@/components/agent-card";
 import { Plus, RefreshCw } from "lucide-react";
 import { DeployAgentModal } from "@/components/deploy-agent-modal";
+import { EditAgentModal } from "@/components/edit-agent-modal";
 
 interface Agent {
   id: string;
@@ -23,6 +24,7 @@ interface AgentDashboardProps {
 
 export function AgentDashboard({ initialAgents, loading, onRefresh }: AgentDashboardProps) {
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
 
   console.log("initialAgents", initialAgents);
 
@@ -74,7 +76,7 @@ export function AgentDashboard({ initialAgents, loading, onRefresh }: AgentDashb
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 w-full transition-all">
           {initialAgents.map((agent, i) => (
             <div key={agent.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full" style={{ animationDelay: `${Math.min(i * 100, 300)}ms` }}>
-              <AgentCard {...agent} />
+              <AgentCard {...agent} onClick={() => setEditingAgentId(agent.id)} />
             </div>
           ))}
         </div>
@@ -83,6 +85,13 @@ export function AgentDashboard({ initialAgents, loading, onRefresh }: AgentDashb
       <DeployAgentModal
         isOpen={isDeployModalOpen}
         onClose={() => setIsDeployModalOpen(false)}
+      />
+
+      <EditAgentModal
+        isOpen={!!editingAgentId}
+        agentId={editingAgentId}
+        onClose={() => setEditingAgentId(null)}
+        onSuccess={onRefresh}
       />
     </>
   );
