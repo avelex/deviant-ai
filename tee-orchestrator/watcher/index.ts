@@ -36,7 +36,7 @@ export async function deployTournament(tournament: string, appId: string): Promi
       docker_compose_file: `
 services:
   referee:
-    image: alexgubin/deviant-referee:v0.1.0
+    image: alexgubin/deviant-referee:v0.2.0
     ports:
       - "80:80"
     environment:
@@ -54,7 +54,7 @@ services:
         condition: service_started
 
   agent1:
-    image: alexgubin/deviant-agent-base:v0.1.0
+    image: alexgubin/deviant-agent-base:v0.2.0
     environment:
       - AGENT_INDEX=0
       - RPC_URL=${RPC_URL}
@@ -66,7 +66,7 @@ services:
       - /var/run/dstack.sock:/var/run/dstack.sock
 
   agent2:
-    image: alexgubin/deviant-agent-base:v0.1.0
+    image: alexgubin/deviant-agent-base:v0.2.0
     environment:
       - AGENT_INDEX=1
       - RPC_URL=${RPC_URL}

@@ -14,7 +14,7 @@ const client = new DstackClient();
 const AGENT1_URL = process.env.AGENT1_URL || "http://agent1:8080/move";
 const AGENT2_URL = process.env.AGENT2_URL || "http://agent2:8080/move";
 const PORT = process.env.PORT || 80;
-const MOVE_TIMEOUT = 60000;
+const MOVE_TIMEOUT = 5 * 60000;
 
 const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
 const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x8a8802E765602BD93aB9aFa3deB3fACA46D9350f") as `0x${string}`;
@@ -134,7 +134,8 @@ async function playGame() {
             console.log(`${playerName} failed to return a move. Game over.`);
             await client.emitEvent('deviant-referee', `${playerName} failed to return a move due to timeout or error. Game over.`);
             const winnerId = currentTurn === 'w' ? agent2Id : agent1Id;
-            return { winnerId, reason: "timeout_or_error", pgn: board.pgn() };
+
+            return { winnerId, reason: "timeout_or_error", pgn: board.pgn(), isDraw: false };
         }
 
         broadcastMove(agentId, moveStr);
@@ -145,7 +146,7 @@ async function playGame() {
                 console.log(`${playerName} made illegal move ${moveStr}. Game over.`);
                 await client.emitEvent('deviant-referee', `${playerName} made illegal move ${moveStr}. Game over.`);
                 const winnerId = currentTurn === 'w' ? agent2Id : agent1Id;
-                return { winnerId, reason: "illegal_move", pgn: board.pgn() };
+                return { winnerId, reason: "illegal_move", pgn: board.pgn(), isDraw: false };
             }
             console.log(`Move played: ${moveStr}`);
             await client.emitEvent('deviant-referee', `${playerName} played move: ${moveStr}.`);
@@ -153,7 +154,7 @@ async function playGame() {
             console.log(`${playerName} returned invalid move format ${moveStr}: ${e.message}. Game over.`);
             await client.emitEvent('deviant-referee', `${playerName} returned invalid move format ${moveStr}: ${e.message}. Game over.`);
             const winnerId = currentTurn === 'w' ? agent2Id : agent1Id;
-            return { winnerId, reason: "invalid_format", pgn: board.pgn() };
+            return { winnerId, reason: "invalid_format", pgn: board.pgn(), isDraw: false };
         }
 
         // Add 250ms sleep between movements
