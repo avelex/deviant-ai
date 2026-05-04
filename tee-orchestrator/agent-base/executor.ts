@@ -34,16 +34,16 @@ export class AgentExecutor {
         script.runInContext(this.context, { timeout: 5000 });
 
         this.scriptInstance = this.context.exports;
-        
+
         if (typeof this.scriptInstance.get_move !== 'function') {
             throw new Error('get_move function not found in agent script');
         }
     }
 
-    public getMove(fen: string): string {
+    public async getMove(fen: string): Promise<string> {
         // In a real environment we might want to wrap this in a timeout too, 
         // but vm.runInContext timeout only applies to the top-level execution.
         // For a more robust solution we'd need isolated-vm or a separate process.
-        return this.scriptInstance.get_move(fen);
+        return await this.scriptInstance.get_move(fen);
     }
 }

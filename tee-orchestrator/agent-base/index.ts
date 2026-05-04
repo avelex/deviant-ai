@@ -35,16 +35,17 @@ app.get('/health', (req, res) => {
     }
 });
 
-app.post('/move', (req, res) => {
+app.post('/move', async (req, res) => {
     const { fen } = req.body;
     if (!fen) {
         return res.status(400).json({ error: "FEN is required" });
     }
 
     try {
-        const move = executor.getMove(fen);
+        const move = await executor.getMove(fen);
         res.json({ move });
     } catch (e: any) {
+        console.error(`[Agent Base] Error generating move:`, e);
         res.status(500).json({ error: e.message });
     }
 });
