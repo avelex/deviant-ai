@@ -4,12 +4,13 @@ pragma solidity ^0.8.20;
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC7857Authorize} from "0g-agent-nft/interfaces/IERC7857Authorize.sol";
 import {ITournament} from "./interfaces/ITournament.sol";
 import {ITournamentFactory} from "./interfaces/ITournamentFactory.sol";
 
-contract Tournament is ITournament, Initializable {
+contract Tournament is ITournament, Initializable, ReentrancyGuardUpgradeable {
     using EnumerableMap for EnumerableMap.UintToAddressMap;
     using ECDSA for bytes32;
 
@@ -24,12 +25,13 @@ contract Tournament is ITournament, Initializable {
     uint256 public totalBetsPool;
 
     EnumerableMap.UintToAddressMap private agents;
-    mapping(address => uint256) public bets;
+    mapping(address => mapping(uint256 => uint256)) public userBetsOnAgent;
+    mapping(address => uint256) public totalUserBets;
+    mapping(address => uint256) public slotsJoinedByUser;
     mapping(uint256 => uint256) public totalBetsOnAgent;
     mapping(address => bool) public hasClaimed;
 
     uint256 constant FEE_RATE_MAX_BPS = 10000;
-    int256 constant DRAWN_RESULT = -1;
 
     modifier onlyFactory() {
         require(msg.sender == address(factory), "Not factory");
@@ -42,6 +44,7 @@ contract Tournament is ITournament, Initializable {
     }
 
     function initialize(ITournament.Config memory _config, address _agentNFT, address _factory) public initializer {
+        __ReentrancyGuard_init();
         factory = ITournamentFactory(_factory);
         config = _config;
         agentNFTContract = IERC7857Authorize(_agentNFT);
@@ -57,6 +60,7 @@ contract Tournament is ITournament, Initializable {
         require(config.tee != address(0), "Tournament not yet have TEE address");
 
         agents.set(_agentId, msg.sender);
+        slotsJoinedByUser[msg.sender]++;
         totalEntryFees += msg.value;
     }
 
@@ -72,12 +76,13 @@ contract Tournament is ITournament, Initializable {
     }
 
     function placeBet(uint256 _agentId) external payable {
-        require(state == ITournament.State.Active, "Not in Active state");
+        require(state == ITournament.State.Registration || state == ITournament.State.Active, "Invalid state");
         require(block.timestamp < config.startedAt, "Betting window closed");
         require(msg.value > 0, "Bet must be > 0");
         require(agents.contains(_agentId), "Agent not in tournament");
 
-        bets[msg.sender] += msg.value;
+        userBetsOnAgent[msg.sender][_agentId] += msg.value;
+        totalUserBets[msg.sender] += msg.value;
         totalBetsPool += msg.value;
         totalBetsOnAgent[_agentId] += msg.value;
     }
@@ -102,52 +107,48 @@ contract Tournament is ITournament, Initializable {
         emit ITournament.TournamentResolved(_winnerAgentId, _noWinner);
     }
 
-    function claimRewards() external {
+    function claimRewards() external nonReentrant {
         require(state == ITournament.State.Finished, "Not Finished");
         require(!hasClaimed[msg.sender], "Already claimed");
 
         uint256 reward = 0;
-        uint256 organizerFee = 0;
-
-        // Calculate Organizer Fee
-        if (msg.sender == config.owner) {
-            organizerFee = ((totalEntryFees + totalBetsPool) * config.feeRate) / FEE_RATE_MAX_BPS;
-            reward += organizerFee;
-        }
-
-        uint256 netEntryFees = totalEntryFees - (totalEntryFees * config.feeRate) / FEE_RATE_MAX_BPS;
-        uint256 netBetsPool = totalBetsPool - (totalBetsPool * config.feeRate) / FEE_RATE_MAX_BPS;
-
-        // Agent Owner Reward (Winner takes all entry fees)
-        if (msg.sender == config.owner) {
-            reward += netEntryFees;
-        }
 
         if (noWinner) {
-            // Refund Case
-            reward += bets[msg.sender];
-            // Refund if sender is an agent owner
-            uint256[] memory agentIds = agents.keys();
-            for (uint256 i = 0; i < agentIds.length; i++) {
-                if (agents.get(agentIds[i]) == msg.sender && config.slotPrice > 0) {
-                    reward += config.slotPrice;
-                }
-            }
+            // Refund Logic: Bettors and Agent Owners get their full amounts back
+            reward += totalUserBets[msg.sender];
+            reward += slotsJoinedByUser[msg.sender] * config.slotPrice;
         } else {
-            // Bettor Reward (Proportional share of net bets pool)
-            uint256 userBet = bets[msg.sender];
-            if (userBet > 0 && totalBetsOnAgent[winnerAgentId] > 0) {
-                uint256 betReward = (userBet * netBetsPool) / totalBetsOnAgent[winnerAgentId];
-                reward += betReward;
+            // Fee calculation (multiplication before division for precision)
+            uint256 organizerFeeTotal = ((totalEntryFees + totalBetsPool) * config.feeRate) / FEE_RATE_MAX_BPS;
+            uint256 netEntryFees = totalEntryFees - ((totalEntryFees * config.feeRate) / FEE_RATE_MAX_BPS);
+            uint256 netBetsPool = totalBetsPool - ((totalBetsPool * config.feeRate) / FEE_RATE_MAX_BPS);
+
+            // 1. Organizer Reward: receives total fee
+            if (msg.sender == config.owner) {
+                reward += organizerFeeTotal;
+            }
+
+            // 2. Winning Agent Owner Reward: receives net entry fees
+            if (msg.sender == agents.get(winnerAgentId)) {
+                reward += netEntryFees;
+            }
+
+            // 3. Winning Bettors Reward: proportional share of net bets pool
+            uint256 betOnWinner = userBetsOnAgent[msg.sender][winnerAgentId];
+            if (betOnWinner > 0 && totalBetsOnAgent[winnerAgentId] > 0) {
+                reward += (betOnWinner * netBetsPool) / totalBetsOnAgent[winnerAgentId];
             }
         }
 
         require(reward > 0, "No rewards to claim");
 
+        // Checks-Effects-Interactions: set claimed before transfer
         hasClaimed[msg.sender] = true;
 
         (bool success,) = payable(msg.sender).call{value: reward}("");
         require(success, "Transfer failed");
+
+        emit ITournament.RewardClaimed(msg.sender, reward);
     }
 
     function setTee(address _tee) external onlyFactory {

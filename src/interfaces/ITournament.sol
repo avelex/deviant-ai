@@ -27,6 +27,7 @@ interface ITournament {
 
     event TournamentStarted();
     event TournamentResolved(uint256 winnerAgentId, bool _noWinner);
+    event RewardClaimed(address indexed user, uint256 amount);
 
     function joinTournament(uint256 agentId) external payable;
 
