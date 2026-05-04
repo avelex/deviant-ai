@@ -1,20 +1,100 @@
 "use client";
 
-import { Check, FileText, X, Settings } from "lucide-react";
+import { Check, FileText, X, Settings, Wallet } from "lucide-react";
 import { useState } from "react";
 import { TournamentData } from "@/lib/mock-data";
 import { LiveChessBoard } from "@/components/live-chess-board";
 import { TournamentResult } from "@/components/tournament-result";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { AdminPanel } from "./admin-panel";
 import { TOURNAMENT_ABI } from "@/lib/web3";
-import { formatEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { ConfigurationModal } from "./configuration-modal";
 import { RulesModal } from "./rules-modal";
 import { StartTournamentButton } from "./start-tournament-button";
 
 interface TournamentDetailProps {
   data: TournamentData;
+}
+
+function BetButton({ tournamentAddress, agentId, startedAt, rawState }: { tournamentAddress: string, agentId: string, startedAt: number, rawState: number }) {
+  const [isBetting, setIsBetting] = useState(false);
+  const [betAmount, setBetAmount] = useState("");
+  const { writeContract, isPending } = useWriteContract();
+
+  const { data: oddsResult } = useReadContract({
+    address: tournamentAddress as `0x${string}`,
+    abi: TOURNAMENT_ABI,
+    functionName: "getOdds",
+    args: [BigInt(agentId)],
+    query: {
+      refetchInterval: 5000
+    }
+  });
+
+  const odds = oddsResult ? (Number(oddsResult as bigint) / 1e18).toFixed(2) : "0.00";
+  console.log("Raw state:", rawState);
+  const canBet = rawState === 0;
+
+  const handleBet = () => {
+    if (!betAmount) return;
+    writeContract({
+      address: tournamentAddress as `0x${string}`,
+      abi: TOURNAMENT_ABI,
+      functionName: "placeBet",
+      args: [BigInt(agentId)],
+      value: parseEther(betAmount),
+    });
+  };
+
+  if (!canBet) {
+    return (
+      <div className="min-w-[80px] sm:min-w-[100px] border-l border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-400">
+        <span className="text-lg font-bold leading-none mb-1">{odds}</span>
+        <span className="text-[9px] font-bold tracking-widest uppercase opacity-70 leading-none">ODDS</span>
+      </div>
+    );
+  }
+
+  if (!isBetting) {
+    return (
+      <button
+        onClick={() => setIsBetting(true)}
+        className="min-w-[80px] sm:min-w-[100px] border-l border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center bg-white dark:bg-slate-950 hover:bg-[#00E5FF] hover:text-black hover:border-transparent text-[#131b2e] dark:text-white transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] focus-visible:ring-inset"
+      >
+        <span className="text-lg font-bold leading-none mb-1">{odds}</span>
+        <span className="text-[9px] font-bold tracking-widest uppercase opacity-70 leading-none">BET</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="min-w-[150px] border-l border-slate-200 dark:border-slate-800 flex flex-col p-2 bg-white dark:bg-slate-950">
+      <input
+        type="number"
+        step="0.01"
+        placeholder="Amount (0G)"
+        value={betAmount}
+        onChange={(e) => setBetAmount(e.target.value)}
+        className="bg-transparent border-b border-[#00E5FF]/50 text-[#131b2e] dark:text-[#00E5FF] text-[10px] py-1 px-1 outline-none focus-visible:border-[#00E5FF] placeholder:text-slate-400 font-bold"
+      />
+      <div className="flex gap-1 mt-2">
+        <button
+          onClick={handleBet}
+          disabled={isPending}
+          className="flex-1 bg-[#00E5FF] text-black p-1 text-[8px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
+        >
+          {isPending ? "..." : "CONFIRM"}
+        </button>
+        <button
+          onClick={() => setIsBetting(false)}
+          className="px-2 border border-slate-700 text-slate-500 hover:text-white text-[8px] font-bold tracking-widest uppercase"
+        >
+          X
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function JoinSection({ tournamentAddress, slotPrice }: { tournamentAddress: string, slotPrice: bigint }) {
@@ -153,7 +233,6 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
 
             <div className="flex flex-col gap-2">
               {data.roster.players.map((player, idx) => {
-                const odds = (1.5 + idx * 0.4).toFixed(2);
                 const isFavorite = idx === 0;
                 return (
                   <div key={idx} className="group relative border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-[#00E5FF]/50 transition-colors flex items-stretch">
@@ -174,10 +253,12 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
                       </div>
                     </div>
 
-                    <button className="min-w-[80px] sm:min-w-[100px] border-l border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center bg-white dark:bg-slate-950 hover:bg-[#00E5FF] hover:text-black hover:border-transparent text-[#131b2e] dark:text-white transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] focus-visible:ring-inset">
-                      <span className="text-lg font-bold leading-none mb-1">{odds}</span>
-                      <span className="text-[9px] font-bold tracking-widest uppercase opacity-70 leading-none">ODDS</span>
-                    </button>
+                    <BetButton
+                      tournamentAddress={data.address!}
+                      agentId={player.id}
+                      startedAt={data.startedAt || 0}
+                      rawState={data.rawState || 0}
+                    />
                   </div>
                 );
               })}

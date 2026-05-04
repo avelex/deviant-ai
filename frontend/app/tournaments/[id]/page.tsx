@@ -41,6 +41,7 @@ export default function TournamentPage({ params }: { params: Promise<{ id: strin
     roster: {
       filledDisplay: `${activeTournament.agentKeys.length}/${activeTournament.slots.split('/')[1]} SLOTS FILL`,
       players: activeTournament.agentKeys.map((agentId, i) => ({
+        id: agentId,
         name: `Agent ${agentId}`,
         address: `ID: ${agentId}`,
         avatarPattern: i % 2 === 0 ? "repeating-linear-gradient(45deg, #e2e8f0 0, #e2e8f0 2px, transparent 2px, transparent 6px)" : "repeating-linear-gradient(-45deg, #e2e8f0 0, #e2e8f0 2px, transparent 2px, transparent 6px)"

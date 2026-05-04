@@ -122,6 +122,8 @@ async function main() {
       for (const log of logs) {
         if (log.args.tournamentAddress && log.args.category === "chess" && log.args.id) {
           await handleTournamentStarted(publicClient, log.args.tournamentAddress, log.args.category, log.args.id);
+        } else {
+          console.log("[Watcher] TournamentCreated event ignored:", log);
         }
       }
     }

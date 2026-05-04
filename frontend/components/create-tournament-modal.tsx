@@ -16,7 +16,7 @@ const CATEGORIES = ["chess", "trading", "gaming"];
 export function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    category: "Chess",
+    category: "chess",
     slotPrice: "0",
     feeRate: "0",
     maxSlots: "8",

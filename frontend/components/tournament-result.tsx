@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useWriteContract } from "wagmi";
+import { useWriteContract, useAccount, useReadContract } from "wagmi";
 import { TOURNAMENT_ABI } from "@/lib/web3";
 
 interface TournamentResultProps {
@@ -29,6 +29,53 @@ interface ResultData {
     eventLog: string;
     signatureChain: any[];
   } | null;
+}
+
+function ClaimSection({ tournamentAddress }: { tournamentAddress: string }) {
+  const { address } = useAccount();
+  const { writeContract, isPending } = useWriteContract();
+  
+  const { data: hasClaimed, refetch: refetchClaimed } = useReadContract({
+    address: tournamentAddress as `0x${string}`,
+    abi: TOURNAMENT_ABI,
+    functionName: "hasClaimed",
+    args: address ? [address] : undefined,
+    query: {
+        enabled: !!address
+    }
+  });
+
+  const handleClaim = () => {
+    writeContract({
+      address: tournamentAddress as `0x${string}`,
+      abi: TOURNAMENT_ABI,
+      functionName: "claimRewards",
+    }, {
+      onSuccess: () => {
+        setTimeout(() => refetchClaimed(), 5000);
+      }
+    });
+  };
+
+  if (!address) return null;
+
+  if (hasClaimed) {
+    return (
+      <div className="text-center py-4 border border-dashed border-[#00E5FF]/30 text-[#00E5FF]/50 text-[10px] font-bold tracking-widest uppercase mt-4">
+        REWARDS CLAIMED
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleClaim}
+      disabled={isPending}
+      className="w-full bg-[#00E5FF] text-black py-4 text-[11px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50 mt-4 shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+    >
+      {isPending ? "CLAIMING..." : "CLAIM REWARDS"}
+    </button>
+  );
 }
 
 export function TournamentResult({ tournamentAddress, liveUri, status }: TournamentResultProps) {
@@ -164,17 +211,20 @@ export function TournamentResult({ tournamentAddress, liveUri, status }: Tournam
         </div>
       </div>
 
-      {/* Footer: Resolve Button */}
+      {/* Footer: Resolve Button & Claim Section */}
       <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/50">
         <button
           onClick={handleResolve}
           disabled={isResolveDisabled}
-          className="w-full bg-[#00E5FF] text-black py-4 text-[11px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[#00E5FF] text-black py-4 text-[11px] font-bold tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
         >
           {buttonText}
         </button>
+
+        {status === 'FINISHED' && (
+          <ClaimSection tournamentAddress={tournamentAddress} />
+        )}
       </div>
     </div>
   );
-
 }

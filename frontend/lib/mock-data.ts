@@ -22,6 +22,7 @@ export interface TournamentData {
   roster: {
     filledDisplay: string;
     players: {
+      id: string;
       name: string;
       address: string;
       avatarPattern: string;

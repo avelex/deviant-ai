@@ -52,7 +52,16 @@ export const TOURNAMENT_ABI = parseAbi([
   'function setLiveUri(string calldata _liveUri) external',
   'function joinTournament(uint256 agentId) external payable',
   'function startTournament() external',
-  'function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature, bool _noWinner) external'
+  'function resolveTournament(uint256 _winnerAgentId, bytes32 _resultHash, bytes calldata _signature, bool _noWinner) external',
+  'function placeBet(uint256 _agentId) external payable',
+  'function claimRewards() external',
+  'function getOdds(uint256 _agentId) external view returns (uint256)',
+  'function totalBetsPool() external view returns (uint256)',
+  'function totalBetsOnAgent(uint256 _agentId) external view returns (uint256)',
+  'function userBetsOnAgent(address _user, uint256 _agentId) external view returns (uint256)',
+  'function hasClaimed(address _user) external view returns (bool)',
+  'function winnerAgentId() external view returns (uint256)',
+  'function noWinner() external view returns (bool)'
 ]);
 
 export const DEVIANT_NFT_ABI = parseAbi([
