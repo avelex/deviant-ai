@@ -7,9 +7,11 @@ import { Chessboard } from "react-chessboard";
 interface LiveChessBoardProps {
   liveUri: string;
   isActive: boolean;
+  playerWhiteId?: string;
+  playerBlackId?: string;
 }
 
-export function LiveChessBoard({ liveUri, isActive }: LiveChessBoardProps) {
+export function LiveChessBoard({ liveUri, isActive, playerWhiteId, playerBlackId }: LiveChessBoardProps) {
   const [game, setGame] = useState(new Chess());
   const [connectionStatus, setConnectionStatus] = useState<string>("WAITING...");
   const wsRef = useRef<WebSocket | null>(null);
@@ -77,11 +79,40 @@ export function LiveChessBoard({ liveUri, isActive }: LiveChessBoardProps) {
     };
   }, [liveUri, isActive]);
 
+  const isWhiteTurn = game.turn() === 'w';
+  const currentAgentId = isWhiteTurn ? playerWhiteId : playerBlackId;
+  const currentTurnText = isWhiteTurn ? "WHITE" : "BLACK";
+
   return (
     <div className="flex flex-col items-center w-full">
-      <div className="mb-4 text-[10px] font-bold tracking-widest uppercase text-slate-500">
-        CONNECTION: <span className={connectionStatus === 'CONNECTED' ? 'text-[#00E5FF]' : 'text-amber-500'}>{connectionStatus}</span>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4 gap-4 sm:gap-0">
+        <h3 className="font-display text-xl md:text-2xl font-light text-[#131b2e] dark:text-white uppercase mt-1 flex items-center gap-3">
+          LIVE BROADCAST
+          {connectionStatus === 'CONNECTED' && (
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            </span>
+          )}
+        </h3>
+
+        {connectionStatus === 'CONNECTED' ? (
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">TURN:</span>
+            <div className="text-[10px] font-bold tracking-widest uppercase bg-slate-100 dark:bg-slate-800 text-[#131b2e] dark:text-white px-3 py-1.5 flex items-center gap-1">
+              <span>{currentTurnText}</span>
+              {currentAgentId && (
+                <span className="text-[#00E5FF]"> (AGENT {currentAgentId})</span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-[10px] font-bold tracking-widest uppercase text-slate-500">
+            CONNECTION: <span className="text-amber-500">{connectionStatus}</span>
+          </div>
+        )}
       </div>
+
       <div className="w-full max-w-[400px]">
         <Chessboard options={{ position: game.fen(), allowDragging: false, darkSquareStyle: { backgroundColor: "#1e293b" }, lightSquareStyle: { backgroundColor: "#f8fafc" } }} />
       </div>

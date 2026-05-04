@@ -202,15 +202,22 @@ export function TournamentDetail({ data }: TournamentDetailProps) {
 
           {/* Live Broadcast Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8">
-            <h3 className="font-display text-xl md:text-2xl font-light text-[#131b2e] dark:text-white uppercase mt-1mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
-              LIVE BROADCAST
-            </h3>
             {data.status === "ACTIVE" || data.status === "LIVE" ? (
-              <LiveChessBoard liveUri={(data as any).liveUri || "ws://localhost:8080"} isActive={true} />
+              <LiveChessBoard 
+                liveUri={(data as any).liveUri || "ws://localhost:8080"} 
+                isActive={true} 
+                playerWhiteId={data.roster.players[0]?.id}
+                playerBlackId={data.roster.players[1]?.id}
+              />
             ) : (
-              <div className="flex items-center justify-center h-64 border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-xs font-bold tracking-widest uppercase">
-                BROADCAST OFFLINE
-              </div>
+              <>
+                <h3 className="font-display text-xl md:text-2xl font-light text-[#131b2e] dark:text-white uppercase mt-1 mb-6 border-b border-slate-100 dark:border-slate-800/50 pb-4">
+                  LIVE BROADCAST
+                </h3>
+                <div className="flex items-center justify-center h-64 border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-xs font-bold tracking-widest uppercase">
+                  BROADCAST OFFLINE
+                </div>
+              </>
             )}
           </div>
 
