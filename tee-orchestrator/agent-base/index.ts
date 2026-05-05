@@ -91,8 +91,8 @@ async function fetchAndLoadScript(publicClient: any) {
         const scriptHash = scriptData.dataHash;
         console.log(`[Agent Base] Agent ${agentId} Script Hash: ${scriptHash}`);
 
-        await downloadScript(scriptHash, AGENT_SCRIPT_PATH);
-        await executor.loadScript(AGENT_SCRIPT_PATH);
+        const scriptCode = await downloadScript(scriptHash);
+        await executor.loadScript(scriptCode);
         isReady = true;
         console.log(`[Agent Base] Script loaded successfully.`);
 

@@ -1,24 +1,24 @@
 import { Indexer } from '@0gfoundation/0g-ts-sdk';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const INDEXER_URL = process.env.INDEXER_URL || "https://indexer-storage-testnet-turbo.0g.ai";
 
-export async function downloadScript(hash: string, destPath: string) {
-    console.log(`[0G Storage] Downloading ${hash} to ${destPath}...`);
+export async function downloadScript(hash: string): Promise<string> {
+    console.log(`[0G Storage] Downloading ${hash}`);
     const indexer = new Indexer(INDEXER_URL);
-    
-    try {
-        // Ensure destination directory exists
-        fs.mkdirSync(path.dirname(destPath), { recursive: true });
 
-        // The Indexer.download method in TS SDK returns Promise<Error | null>
-        const err = await indexer.download(hash, destPath, true);
+    try {
+        const [blob, err] = await indexer.downloadToBlob(hash);
         if (err) {
             throw err;
         }
 
-        console.log(`[0G Storage] Successfully downloaded and saved to ${destPath}`);
+        if (!blob) {
+            throw new Error("Failed to download script content");
+        }
+
+        const text = await blob.text();
+        console.log(`[0G Storage] Successfully downloaded`);
+        return text;
     } catch (e: any) {
         console.error(`[0G Storage] Failed to download ${hash}: ${e.message}`);
         throw e;

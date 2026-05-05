@@ -1,6 +1,5 @@
 import * as ts from 'typescript';
 import * as vm from 'vm';
-import * as fs from 'fs';
 
 export class AgentExecutor {
     private context: vm.Context;
@@ -18,16 +17,12 @@ export class AgentExecutor {
         });
     }
 
-    public async loadScript(filePath: string) {
-        let code = fs.readFileSync(filePath, 'utf8');
-
-        if (filePath.endsWith('.ts')) {
-            console.log(`[Executor] Transpiling ${filePath}...`);
-            const result = ts.transpileModule(code, {
-                compilerOptions: { module: ts.ModuleKind.CommonJS }
-            });
-            code = result.outputText;
-        }
+    public async loadScript(code: string) {
+        console.log(`[Executor] Transpiling...`);
+        const result = ts.transpileModule(code, {
+            compilerOptions: { module: ts.ModuleKind.CommonJS }
+        });
+        code = result.outputText;
 
         const script = new vm.Script(code);
         // Add 5 second timeout for initial script execution

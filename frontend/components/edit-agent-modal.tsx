@@ -30,11 +30,11 @@ export function EditAgentModal({ isOpen, onClose, agentId, onSuccess }: EditAgen
   useEffect(() => {
     async function loadAgentData() {
       if (!isOpen || !agentId || !publicClient) return;
-      
+
       setIsLoading(true);
       setScriptCode("");
       setRootHash(null);
-      
+
       try {
         const datas = await publicClient.readContract({
           address: DEVIANT_ID_ADDRESS,
@@ -42,15 +42,15 @@ export function EditAgentModal({ isOpen, onClose, agentId, onSuccess }: EditAgen
           functionName: 'intelligentDatasOf',
           args: [BigInt(agentId)],
         }) as { dataDescription: string, dataHash: string }[];
-        
+
         const scriptData = datas.find(d => d.dataDescription === "script");
-        
+
         if (scriptData && scriptData.dataHash) {
           const hash = scriptData.dataHash.replace("0x", "");
-          
+
           const indexer = new Indexer(INDEXER_URL);
           const [blob, err] = await indexer.downloadToBlob(hash);
-          
+
           if (err) {
             console.error("Failed to load script content", err);
           } else if (blob) {
