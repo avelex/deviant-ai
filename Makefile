@@ -4,7 +4,7 @@ include .env
 ADMIN=0x200f3eed8995472ad495ef8c1cfe74cc2eff7414
 
 deploy-agent-id:
-	ADMIN=$(ADMIN) forge script scripts/AgentID.s.sol \
+	ADMIN=$(ADMIN) forge script scripts/AgentID/Deploy.s.sol \
 		--account deployer \
 		--broadcast \
 		--rpc-url=${RPC_URL} \

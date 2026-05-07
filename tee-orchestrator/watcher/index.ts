@@ -1,19 +1,13 @@
 import { createPublicClient, http, parseAbiItem, parseAbi, PublicClient } from 'viem';
-import { defineChain } from 'viem';
+import { zeroGMainnet } from 'viem/chains';
 import 'dotenv/config';
 import { createClient } from "@phala/cloud";
 
-const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = "0x8a8802E765602BD93aB9aFa3deB3fACA46D9350f" as `0x${string}`;
-const AGENT_ID_ADDRESS = "0x06E824145Be317FbbC2386c6afD4D580786458D7" as `0x${string}`;
+const RPC_URL = process.env.RPC_URL || "https://evmrpc.0g.ai";
+const FACTORY_ADDRESS = "0xae033dA7939958AaD08524e1D44Fe1F46745134A" as `0x${string}`;
+const AGENT_ID_ADDRESS = "0x9B68a0F27Ea511AAb1eeB2e77077e37b738ce46b" as `0x${string}`;
+const INDEXER_URL = process.env.INDEXER_URL || "https://indexer-storage-turbo.0g.ai";
 
-const zeroGTestnet = defineChain({
-  id: 16602,
-  name: '0G Testnet',
-  network: '0g-testnet',
-  nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
-  rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
-});
 
 export async function deployTournament(tournament: string, appId: string): Promise<string> {
   console.log(`Deploying tournament ${appId} to Phala Cloud...`);
@@ -58,6 +52,7 @@ services:
     environment:
       - AGENT_INDEX=0
       - RPC_URL=${RPC_URL}
+      - INDEXER_URL=${INDEXER_URL}
       - FACTORY_ADDRESS=${FACTORY_ADDRESS}
       - TOURNAMENT_ADDRESS=${tournament}
       - AGENT_ID_ADDRESS=${AGENT_ID_ADDRESS}
@@ -70,6 +65,7 @@ services:
     environment:
       - AGENT_INDEX=1
       - RPC_URL=${RPC_URL}
+      - INDEXER_URL=${INDEXER_URL}
       - FACTORY_ADDRESS=${FACTORY_ADDRESS}
       - TOURNAMENT_ADDRESS=${tournament}
       - AGENT_ID_ADDRESS=${AGENT_ID_ADDRESS}
@@ -108,7 +104,7 @@ async function handleTournamentStarted(publicClient: PublicClient, tournamentAdd
 
 async function main() {
   const publicClient = createPublicClient({
-    chain: zeroGTestnet,
+    chain: zeroGMainnet,
     transport: http()
   });
 

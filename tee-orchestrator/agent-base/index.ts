@@ -1,27 +1,18 @@
 import express from 'express';
 import { downloadScript } from './storage';
 import { AgentExecutor } from './executor';
-import { createPublicClient, http, parseAbiItem, parseAbi, defineChain } from 'viem';
+import { createPublicClient, http, parseAbiItem, parseAbi } from 'viem';
+import { zeroGMainnet } from 'viem/chains';
 
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
-const AGENT_SCRIPT_PATH = process.env.AGENT_SCRIPT_PATH || "/data/agent.ts";
 const AGENT_INDEX = parseInt(process.env.AGENT_INDEX!); // 0 for agent 1, 1 for agent 2
+const FACTORY_ADDRESS = process.env.FACTORY_ADDRESS! as `0x${string}`;
+const TOURNAMENT_ADDRESS = process.env.TOURNAMENT_ADDRESS! as `0x${string}`;
+const AGENT_ID_ADDRESS = process.env.AGENT_ID_ADDRESS! as `0x${string}`;
 
-const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x8a8802E765602BD93aB9aFa3deB3fACA46D9350f") as `0x${string}`;
-const TOURNAMENT_ADDRESS = process.env.TOURNAMENT_ADDRESS as `0x${string}`;
-const AGENT_ID_ADDRESS = (process.env.AGENT_ID_ADDRESS || "0x06E824145Be317FbbC2386c6afD4D580786458D7") as `0x${string}`;
-
-const zeroGTestnet = defineChain({
-    id: 16602,
-    name: '0G Testnet',
-    network: '0g-testnet',
-    nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
-    rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
-});
 
 let isReady = false;
 
@@ -103,7 +94,7 @@ async function fetchAndLoadScript(publicClient: any) {
 
 function listenForTournamentStart() {
     const publicClient = createPublicClient({
-        chain: zeroGTestnet,
+        chain: zeroGMainnet,
         transport: http()
     });
 

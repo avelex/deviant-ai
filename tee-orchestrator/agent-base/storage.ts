@@ -1,6 +1,6 @@
 import { Indexer } from '@0gfoundation/0g-ts-sdk';
 
-const INDEXER_URL = process.env.INDEXER_URL || "https://indexer-storage-testnet-turbo.0g.ai";
+const INDEXER_URL = process.env.INDEXER_URL!;
 
 export async function downloadScript(hash: string): Promise<string> {
     console.log(`[0G Storage] Downloading ${hash}`);

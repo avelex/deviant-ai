@@ -3,11 +3,12 @@ import { Chess } from 'chess.js';
 import { DstackClient } from '@phala/dstack-sdk';
 import express from 'express';
 import cors from 'cors';
-import { createPublicClient, http, parseAbiItem, parseAbi, defineChain, PublicClient } from 'viem';
+import { createPublicClient, http, parseAbiItem, parseAbi, PublicClient } from 'viem';
 import { WebSocketServer, WebSocket } from 'ws';
 
 import { toViemAccountSecure } from '@phala/dstack-sdk/viem';
 import { keccak256, encodePacked } from 'viem';
+import { zeroGMainnet } from 'viem/chains';
 
 const client = new DstackClient();
 
@@ -16,17 +17,8 @@ const AGENT2_URL = process.env.AGENT2_URL || "http://agent2:8080/move";
 const PORT = process.env.PORT || 80;
 const MOVE_TIMEOUT = 5 * 60000;
 
-const RPC_URL = process.env.RPC_URL || "https://evmrpc-testnet.0g.ai";
-const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x8a8802E765602BD93aB9aFa3deB3fACA46D9350f") as `0x${string}`;
-const TOURNAMENT_ADDRESS = process.env.TOURNAMENT_ADDRESS as `0x${string}`;
-
-const zeroGTestnet = defineChain({
-    id: 16602,
-    name: '0G Testnet',
-    network: '0g-testnet',
-    nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
-    rpcUrls: { default: { http: [RPC_URL] }, public: { http: [RPC_URL] } },
-});
+const FACTORY_ADDRESS = process.env.FACTORY_ADDRESS! as `0x${string}`;
+const TOURNAMENT_ADDRESS = process.env.TOURNAMENT_ADDRESS! as `0x${string}`;
 
 // Memory storage for the game result and identity
 let gameResult: any = null;
@@ -233,7 +225,7 @@ async function fetchAgentIds(publicClient: PublicClient) {
 
 function listenForTournamentStart() {
     const publicClient = createPublicClient({
-        chain: zeroGTestnet,
+        chain: zeroGMainnet,
         transport: http()
     });
 

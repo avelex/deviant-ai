@@ -2,40 +2,22 @@ import { createPublicClient, http, parseAbi, defineChain } from 'viem';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
 import type { Account, Chain, Client, Transport } from 'viem';
+import { zeroGMainnet } from 'wagmi/chains'
 
-export const RPC_URL = "https://evmrpc-testnet.0g.ai";
-export const INDEXER_URL = "https://indexer-storage-testnet-turbo.0g.ai";
+export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://evmrpc.0g.ai";
+export const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || "https://indexer-storage-turbo.0g.ai";
 export const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS! as `0x${string}`;
 export const DEVIANT_ID_ADDRESS = process.env.NEXT_PUBLIC_DEVIANT_ID_ADDRESS! as `0x${string}`;
-
-export const zeroGGalileo = defineChain({
-  id: 16602,
-  name: '0G Galileo Testnet',
-  nativeCurrency: { name: '0G', symbol: '0G', decimals: 18 },
-  rpcUrls: {
-    default: { http: [RPC_URL] },
-  },
-  blockExplorers: {
-    default: { name: '0G Scan', url: 'https://chainscan-testnet.0g.ai' },
-  },
-  contracts: {
-    multicall3: {
-      address: '0xca11bde05977b3631167028862be2a173976ca11',
-      blockCreated: 297775, // Approximate block number if known, otherwise omitted or low value
-    },
-  },
-  testnet: true,
-});
 
 export const config = getDefaultConfig({
   appName: 'Deviant AI',
   projectId: 'YOUR_PROJECT_ID', // Replace with a real one or placeholder for now
-  chains: [zeroGGalileo],
+  chains: [zeroGMainnet],
   ssr: true,
 });
 
 export const publicClient = createPublicClient({
-  chain: zeroGGalileo,
+  chain: zeroGMainnet,
   transport: http(RPC_URL),
 });
 
