@@ -48,14 +48,32 @@ export function EditAgentModal({ isOpen, onClose, agentId, onSuccess }: EditAgen
         if (scriptData && scriptData.dataHash) {
           const hash = scriptData.dataHash.replace("0x", "");
 
-          const indexer = new Indexer(INDEXER_URL);
-          const [blob, err] = await indexer.downloadToBlob(hash);
+          // Save original XHR open to restore later
+          const originalXHROpen = XMLHttpRequest.prototype.open;
 
-          if (err) {
-            console.error("Failed to load script content", err);
-          } else if (blob) {
-            const text = await blob.text();
-            setScriptCode(text);
+          try {
+            // Override XHR open to proxy insecure HTTP calls to 0G storage nodes
+            // @ts-ignore - Ignore TS complaints about the exact signature since it has many overloads
+            XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...rest: any[]) {
+              let urlStr = url.toString();
+              if (urlStr.startsWith('http://') && urlStr.includes(':5678')) {
+                urlStr = `/api/0g-proxy?url=${encodeURIComponent(urlStr)}`;
+              }
+              return originalXHROpen.apply(this, [method, urlStr, ...rest] as any);
+            };
+
+            const indexer = new Indexer(INDEXER_URL);
+            const [blob, err] = await indexer.downloadToBlob(hash);
+
+            if (err) {
+              console.error("Failed to load script content", err);
+            } else if (blob) {
+              const text = await blob.text();
+              setScriptCode(text);
+            }
+          } finally {
+            // Restore original XHR open
+            XMLHttpRequest.prototype.open = originalXHROpen;
           }
         }
       } catch (error) {
@@ -76,7 +94,21 @@ export function EditAgentModal({ isOpen, onClose, agentId, onSuccess }: EditAgen
     if (!scriptCode || !walletClient) return;
 
     setIsUploading(true);
+    
+    // Save original XHR open to restore later
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    
     try {
+      // Override XHR open to proxy insecure HTTP calls to 0G storage nodes
+      // @ts-ignore - Ignore TS complaints about the exact signature since it has many overloads
+      XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...rest: any[]) {
+        let urlStr = url.toString();
+        if (urlStr.startsWith('http://') && urlStr.includes(':5678')) {
+          urlStr = `/api/0g-proxy?url=${encodeURIComponent(urlStr)}`;
+        }
+        return originalXHROpen.apply(this, [method, urlStr, ...rest] as any);
+      };
+
       // Convert walletClient to ethers signer
       const provider = new ethers.BrowserProvider(walletClient);
       const signer = await provider.getSigner();
@@ -103,6 +135,8 @@ export function EditAgentModal({ isOpen, onClose, agentId, onSuccess }: EditAgen
       alert(`Upload failed: ${error.message}`);
     } finally {
       setIsUploading(false);
+      // Restore original XHR open
+      XMLHttpRequest.prototype.open = originalXHROpen;
     }
   };
 

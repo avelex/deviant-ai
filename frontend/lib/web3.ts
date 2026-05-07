@@ -2,7 +2,18 @@ import { createPublicClient, http, parseAbi, defineChain } from 'viem';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
 import type { Account, Chain, Client, Transport } from 'viem';
-import { zeroGMainnet } from 'wagmi/chains'
+import { zeroGMainnet as defaultZeroGMainnet } from 'wagmi/chains';
+
+export const zeroGMainnet = defineChain({
+  ...defaultZeroGMainnet,
+  contracts: {
+    ...defaultZeroGMainnet.contracts,
+    multicall3: {
+      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
+      blockCreated: 6546802,
+    },
+  },
+});
 
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://evmrpc.0g.ai";
 export const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || "https://indexer-storage-turbo.0g.ai";
