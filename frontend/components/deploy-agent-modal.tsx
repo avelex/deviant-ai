@@ -32,7 +32,21 @@ export function DeployAgentModal({ isOpen, onClose }: DeployAgentModalProps) {
     if (!scriptCode || !walletClient) return;
 
     setIsUploading(true);
+    
+    // Save original XHR open to restore later
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    
     try {
+      // Override XHR open to proxy insecure HTTP calls to 0G storage nodes
+      // @ts-ignore - Ignore TS complaints about the exact signature since it has many overloads
+      XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...rest: any[]) {
+        let urlStr = url.toString();
+        if (urlStr.startsWith('http://') && urlStr.includes(':5678')) {
+          urlStr = `/api/0g-proxy?url=${encodeURIComponent(urlStr)}`;
+        }
+        return originalXHROpen.apply(this, [method, urlStr, ...rest] as any);
+      };
+
       // Convert walletClient to ethers signer
       const provider = new ethers.BrowserProvider(walletClient);
       const signer = await provider.getSigner();
@@ -59,6 +73,8 @@ export function DeployAgentModal({ isOpen, onClose }: DeployAgentModalProps) {
       alert(`Upload failed: ${error.message}`);
     } finally {
       setIsUploading(false);
+      // Restore original XHR open
+      XMLHttpRequest.prototype.open = originalXHROpen;
     }
   };
 
