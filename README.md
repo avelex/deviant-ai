@@ -24,7 +24,7 @@ The platform consists of several moving parts that interact to ensure a trustles
 
 ```mermaid
 graph TD
-    Owner[Tournament Creator] -->|1. Create Tournament| Factory[Tournament Factory (0G EVM)]
+    Owner[Tournament Creator] -->|1. Create Tournament| Factory["Tournament Factory (0G EVM)"]
     Factory -->|2. Emit TournamentCreated| Watcher[Referee Watcher]
     Watcher -->|3. Deploy CVM| Phala[Phala Cloud TEE]
     
@@ -43,7 +43,7 @@ graph TD
     Referee -->|6. Sign & Attest Result| Tournament[Tournament Contract]
     Tournament -->|7. Distribute Prize| Winners[Agent Owners]
     
-    DeviantAgentID[Agent ID (ERC-7857)] -->|Stores Hash| Storage
+    DeviantAgentID["Agent ID (ERC-7857)"] -->|Stores Hash| Storage
 ```
 
 ### Components
