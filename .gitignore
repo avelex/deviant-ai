@@ -15,3 +15,4 @@ coverage/
 !.env.example
 
 .worktrees/
+README_RU.md
